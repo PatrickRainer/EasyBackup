@@ -45,6 +45,7 @@ namespace EasyBackup
         public MainWindow()
         {
             InitializeComponent();
+            CaseGrid.LoadingRow += CaseGridOnLoadingRow;
 
             // Load Backup List
             LoadBackupList();
@@ -85,6 +86,15 @@ namespace EasyBackup
             //notifyIcon.Icon = this.Icon;
             notifyIcon.Visible = true;
 
+        }
+
+        void CaseGridOnLoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            var backupCase = e.Row.Item as BackupCase;
+            if (!Directory.Exists(backupCase?.sourcePath))
+            {
+                e.Row.Background = new SolidColorBrush(Colors.IndianRed);
+            }
         }
 
         private void StartWithWindows()
@@ -180,9 +190,11 @@ namespace EasyBackup
             //Check if the source Directory exists
             if (!Directory.Exists(_backupCase.sourcePath))
             {
-                MessageBox.Show(_backupCase.sourcePath + " does not exist!");
+                //MessageBox.Show(_backupCase.sourcePath + " does not exist!");
+                StatusText.Text = _backupCase.sourcePath + " does not exist!";
                 return;
             }
+
             //Now Create all of the directories
             foreach (string dirPath in Directory.GetDirectories(_backupCase.sourcePath, "*",
                     SearchOption.AllDirectories))
