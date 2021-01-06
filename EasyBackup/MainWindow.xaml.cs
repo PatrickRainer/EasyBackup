@@ -177,9 +177,14 @@ namespace EasyBackup
 
             isBackupRunning = true;
 
+            //Check if the source Directory exists
+            if (!Directory.Exists(_backupCase.sourcePath))
+            {
+                MessageBox.Show(_backupCase.sourcePath + " does not exist!");
+                return;
+            }
             //Now Create all of the directories
-
-                foreach (string dirPath in Directory.GetDirectories(_backupCase.sourcePath, "*",
+            foreach (string dirPath in Directory.GetDirectories(_backupCase.sourcePath, "*",
                     SearchOption.AllDirectories))
                 {
                     Directory.CreateDirectory(dirPath.Replace(_backupCase.sourcePath, _backupCase.destinationPath));
