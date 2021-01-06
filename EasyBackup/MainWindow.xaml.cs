@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Deployment.Application;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Windows;
@@ -11,13 +12,17 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Media;
+using EasyBackup.Annotations;
 using Microsoft.Win32;
 using Application = System.Windows.Forms.Application;
 using Timer = System.Windows.Forms.Timer;
 
+//TODO: Bind all controls to the SelectedBackup property
+//TODO: User Hangfire Framework for managing those tasks
+
 namespace EasyBackup
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : INotifyPropertyChanged
     {
         readonly NotifyIcon _notifyIcon = new NotifyIcon();
         //private string mySourcePath = @"C:\Intel";
@@ -25,15 +30,28 @@ namespace EasyBackup
 
         ObservableCollection<BackupCase> _caseList = new ObservableCollection<BackupCase>();
 
+        public BackupCase SelectedBackup
+        {
+            get => _selectedBackup;
+            set
+            {
+                if (Equals(value, _selectedBackup)) return;
+                _selectedBackup = value;
+                OnPropertyChanged();
+            }
+        }
+
         bool _isBackupRunning;
         CollectionViewSource _itemCollectionViewSource;
 
         Timer _timer1;
+        BackupCase _selectedBackup;
 
         public MainWindow()
         {
             InitializeComponent();
             CaseGrid.LoadingRow += CaseGridOnLoadingRow;
+            CaseGrid.SelectionChanged += (sender, args) => { SelectedBackup = CaseGrid.SelectedItem as BackupCase;};
 
             // Load Backup List
             LoadBackupList();
@@ -58,6 +76,7 @@ namespace EasyBackup
             // DataGrid Binding
             //CaseGrid.ItemsSource = CaseList;
             DataGridBinding();
+            //TODO: Select the first Backup
 
             //Version Label
             if (ApplicationDeployment.IsNetworkDeployed)
@@ -321,5 +340,12 @@ namespace EasyBackup
 
         // Run in Icon Tray
         // https://stackoverflow.com/questions/11027051/develop-a-program-that-runs-in-the-background-in-net
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
