@@ -1,46 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Deployment.Application;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.IO;
-using Microsoft.Win32;
 using System.Windows.Forms;
-using System.Threading;
-using System.Diagnostics;
+using System.Windows.Media;
+using Microsoft.Win32;
 using Application = System.Windows.Forms.Application;
 using Timer = System.Windows.Forms.Timer;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Collections.ObjectModel;
-using System.Deployment.Application;
-using MessageBox = System.Windows.MessageBox;
 
 namespace EasyBackup
 {
     public partial class MainWindow : Window
     {
+        readonly NotifyIcon _notifyIcon = new NotifyIcon();
         //private string mySourcePath = @"C:\Intel";
         //private string myDestinationPath = @"\\sulzer.com\dfs\ct\users\ch\rainpat\Documents\Backup";
 
-        private ObservableCollection<BackupCase> CaseList = new ObservableCollection<BackupCase>();
-        private CollectionViewSource itemCollectionViewSource;
+        ObservableCollection<BackupCase> _caseList = new ObservableCollection<BackupCase>();
 
-        private List<IterationType> IterationTypeList { get; set; }
-               
-        private Timer timer1;
+        bool _isBackupRunning;
+        CollectionViewSource _itemCollectionViewSource;
 
-        private bool isBackupRunning = false;
-
-        private NotifyIcon notifyIcon = new NotifyIcon();
+        Timer _timer1;
 
         public MainWindow()
         {
@@ -50,17 +38,14 @@ namespace EasyBackup
             // Load Backup List
             LoadBackupList();
 
-            //TOOD: Load Start with windows
+            //TODO: Load Start with windows
             //StartWithWindows();
 
             // Bind Iteration Type Combobox
             cbIterationType.Items.Clear();
-            Array values = Enum.GetValues((typeof(IterationType)));
+            var values = Enum.GetValues(typeof(IterationType));
             IterationTypeList = new List<IterationType>();
-            foreach (IterationType value in values)
-            {
-                IterationTypeList.Add(value);
-            }
+            foreach (IterationType value in values) IterationTypeList.Add(value);
             cbIterationType.ItemsSource = IterationTypeList;
             cbIterationType.SelectedIndex = 0;
 
@@ -76,49 +61,38 @@ namespace EasyBackup
 
             //Version Label
             if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                lblVersion.Content = string.Format("Version: {0}",
-                    ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(4));
-            }
+                lblVersion.Content = $"Version: {ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(4)}";
 
             // Tray Icon
-            notifyIcon.Text = "Easy Backup";
+            _notifyIcon.Text = @"Easy Backup";
             //notifyIcon.Icon = this.Icon;
-            notifyIcon.Visible = true;
-
+            _notifyIcon.Visible = true;
         }
+
+        List<IterationType> IterationTypeList { get; }
 
         void CaseGridOnLoadingRow(object sender, DataGridRowEventArgs e)
         {
             var backupCase = e.Row.Item as BackupCase;
-            if (!Directory.Exists(backupCase?.sourcePath))
-            {
-                e.Row.Background = new SolidColorBrush(Colors.IndianRed);
-            }
+            if (!Directory.Exists(backupCase?.sourcePath)) e.Row.Background = new SolidColorBrush(Colors.IndianRed);
         }
 
-        private void StartWithWindows()
+        void StartWithWindows()
         {
-            if ((bool)cboxStartWithWindows.IsChecked)
-            {
+            if ((bool) cboxStartWithWindows.IsChecked)
                 AddApplicationToStartup();
-            }
-            else if (!(bool)cboxStartWithWindows.IsChecked)
-            {
-                RemoveApplicationFromStartup();
-            }
+            else if (!(bool) cboxStartWithWindows.IsChecked) RemoveApplicationFromStartup();
         }
 
-        private void DataGridBinding()
+        void DataGridBinding()
         {
-            
-            itemCollectionViewSource = (CollectionViewSource)(FindResource("ItemCollectionViewSource"));
-            itemCollectionViewSource.Source = CaseList;
+            _itemCollectionViewSource = (CollectionViewSource) FindResource("ItemCollectionViewSource");
+            _itemCollectionViewSource.Source = _caseList;
         }
 
         public static void AddApplicationToStartup()
         {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
                 key.SetValue("Easy_Backup_Sync", "\"" + Application.ExecutablePath + "\"");
             }
@@ -126,66 +100,60 @@ namespace EasyBackup
 
         public static void RemoveApplicationFromStartup()
         {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
                 key.DeleteValue("Easy_Backup_Sync", false);
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        void Button_Click(object sender, RoutedEventArgs e)
         {
             tbSourcePath.Text = GetPath();
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        void Button_Click_1(object sender, RoutedEventArgs e)
         {
             tbDestinationPath.Text = GetPath();
         }
 
         /// <summary>
-        /// Open a Folder Browser Dialog and return the path
+        ///     Open a Folder Browser Dialog and return the path
         /// </summary>
         /// <returns></returns>
-        private string GetPath()
+        string GetPath()
         {
-            FolderBrowserDialog fbd = new FolderBrowserDialog();
-            string path;
+            var fbd = new FolderBrowserDialog();
 
             if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                path = fbd.SelectedPath;
+                var path = fbd.SelectedPath;
                 return path;
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
-        private void BtnBackupNow_Click(object sender, RoutedEventArgs e)
+        void BtnBackupNow_Click(object sender, RoutedEventArgs e)
         {
             // Sanity Check
-            if (IsBackupCaseSelected()==false)
-            {
-                return;
-            }
+            if (IsBackupCaseSelected() == false) return;
 
             // Copy
-            CopyFolderContent((BackupCase)CaseGrid.SelectedItem);
+            CopyFolderContent((BackupCase) CaseGrid.SelectedItem);
         }
 
-        private void CopyFolderContent(BackupCase _backupCase)
+        void CopyFolderContent(BackupCase _backupCase)
         {
-            if (isBackupRunning)
+            if (_isBackupRunning)
             {
-                StatusText.Text="A Backup is already Running";
+                StatusText.Text = "A Backup is already Running";
                 return;
             }
 
-            StatusText.Text="running ...";
+            StatusText.Text = "running ...";
             StatusText.UpdateLayout();
 
-            isBackupRunning = true;
+            _isBackupRunning = true;
 
             //Check if the source Directory exists
             if (!Directory.Exists(_backupCase.sourcePath))
@@ -196,16 +164,16 @@ namespace EasyBackup
             }
 
             //Now Create all of the directories
-            foreach (string dirPath in Directory.GetDirectories(_backupCase.sourcePath, "*",
-                    SearchOption.AllDirectories))
-                {
-                    Directory.CreateDirectory(dirPath.Replace(_backupCase.sourcePath, _backupCase.destinationPath));
-                    ProgressBar.Value += 1;
-                }
-            
+            foreach (var dirPath in Directory.GetDirectories(_backupCase.sourcePath, "*",
+                SearchOption.AllDirectories))
+            {
+                Directory.CreateDirectory(dirPath.Replace(_backupCase.sourcePath, _backupCase.destinationPath));
+                ProgressBar.Value += 1;
+            }
+
 
             //Copy all the files & Replaces any files with the same name
-            foreach (string newPath in Directory.GetFiles(_backupCase.sourcePath, "*.*",
+            foreach (var newPath in Directory.GetFiles(_backupCase.sourcePath, "*.*",
                 SearchOption.AllDirectories))
             {
                 File.Copy(newPath, newPath.Replace(_backupCase.sourcePath, _backupCase.destinationPath), true);
@@ -216,15 +184,15 @@ namespace EasyBackup
 
             StatusText.Text = "Backup finished!";
 
-            isBackupRunning = false;
+            _isBackupRunning = false;
         }
 
-        private void CboxStartWithWindows_Checked(object sender, RoutedEventArgs e)
+        void CboxStartWithWindows_Checked(object sender, RoutedEventArgs e)
         {
             AddApplicationToStartup();
         }
 
-        private void CboxStartWithWindows_Unchecked(object sender, RoutedEventArgs e)
+        void CboxStartWithWindows_Unchecked(object sender, RoutedEventArgs e)
         {
             RemoveApplicationFromStartup();
         }
@@ -232,59 +200,55 @@ namespace EasyBackup
 
         public void InitTimer()
         {
-            timer1 = new Timer();
-            timer1.Tick += new EventHandler(timer1_Tick);
-            timer1.Interval = 5000; // in miliseconds
-            timer1.Start();
+            _timer1 = new Timer();
+            _timer1.Tick += timer1_Tick;
+            _timer1.Interval = 5000; // in miliseconds
+            _timer1.Start();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        void timer1_Tick(object sender, EventArgs e)
         {
             isBackupTimeReached();
 
             BackupDailyAt12();
         }
 
-        private void BackupDailyAt12()
+        void BackupDailyAt12()
         {
             // Get today 12 o'clock
-            DateTime.TryParse(DateTime.Now.Date.ToShortDateString() + " 12:00 PM", out DateTime _TodayAt12);
+            DateTime.TryParse(DateTime.Now.Date.ToShortDateString() + " 12:00 PM", out var _TodayAt12);
 
             // Thread List
-            List<Thread> threads = new List<Thread>();
+            var threads = new List<Thread>();
 
-            foreach (BackupCase bc in CaseList)
-            {
+            foreach (var bc in _caseList)
                 if (DateTime.Now >= _TodayAt12 && bc.lastBackupTime.Date != DateTime.Now.Date)
-                {
                     CopyFolderContent(bc);
-                        //threads.Add(new Thread(() => CopyFolderContent(bc)));
-                        //threads.Last().Start();
-                }
-            }
+            //threads.Add(new Thread(() => CopyFolderContent(bc)));
+            //threads.Last().Start();
         }
 
-        private void isBackupTimeReached()
+        void isBackupTimeReached()
         {
             //TODO:
         }
 
-        private void btnAddClick(object sender, RoutedEventArgs e)
+        void btnAddClick(object sender, RoutedEventArgs e)
         {
             AddBackupCase();
         }
 
-        private void AddBackupCase()
+        void AddBackupCase()
         {
-            BackupCase bc = new BackupCase();
+            var bc = new BackupCase();
 
             // Parse IterationType
             Enum.TryParse(cbIterationType.Text, out IterationType _iterationType);
 
             // Create DateTime
-            DateTime.TryParse(dpDatePicker.Text + " " + tbTime.Text, out DateTime _DateTimeResult);
+            DateTime.TryParse(dpDatePicker.Text + " " + tbTime.Text, out var _DateTimeResult);
 
-            CaseList.Add(new BackupCase()
+            _caseList.Add(new BackupCase
             {
                 name = tbBackupName.Text,
                 sourcePath = tbSourcePath.Text,
@@ -294,37 +258,28 @@ namespace EasyBackup
             });
         }
 
-        private void DeleteBackupCase()
+        void DeleteBackupCase()
         {
-            if (IsBackupCaseSelected()==false)
-            {
-                return;
-            }
+            if (IsBackupCaseSelected() == false) return;
 
-            CaseList.RemoveAt(CaseGrid.SelectedIndex);
-
+            _caseList.RemoveAt(CaseGrid.SelectedIndex);
         }
 
-        private bool IsBackupCaseSelected()
+        bool IsBackupCaseSelected()
         {
-            if (CaseList.Count - 1 < CaseGrid.SelectedIndex || CaseGrid.SelectedIndex == -1)
-            {
-               return false;
-            }
-            else
-            {
-                return true;
-            }
+            if (_caseList.Count - 1 < CaseGrid.SelectedIndex || CaseGrid.SelectedIndex == -1)
+                return false;
+            return true;
         }
 
-        private void SaveBackupList()
+        void SaveBackupList()
         {
             try
             {
                 using (Stream stream = File.Open("BackupList.bin", FileMode.Create))
                 {
-                    BinaryFormatter bin = new BinaryFormatter();
-                    bin.Serialize(stream, CaseList);
+                    var bin = new BinaryFormatter();
+                    bin.Serialize(stream, _caseList);
                 }
             }
             catch (IOException)
@@ -332,15 +287,15 @@ namespace EasyBackup
             }
         }
 
-        private void LoadBackupList()
+        void LoadBackupList()
         {
             try
             {
                 using (Stream stream = File.Open("BackupList.bin", FileMode.Open))
                 {
-                    BinaryFormatter bin = new BinaryFormatter();
+                    var bin = new BinaryFormatter();
 
-                    CaseList = (ObservableCollection<BackupCase>)bin.Deserialize(stream);
+                    _caseList = (ObservableCollection<BackupCase>) bin.Deserialize(stream);
                 }
             }
             catch (IOException)
@@ -348,17 +303,17 @@ namespace EasyBackup
             }
         }
 
-        private void BtnTest_Click(object sender, RoutedEventArgs e)
+        void BtnTest_Click(object sender, RoutedEventArgs e)
         {
             BackupDailyAt12();
         }
 
-        private void BtnDelete_Click(object sender, RoutedEventArgs e)
+        void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
             DeleteBackupCase();
         }
 
-        private void FrmMainWindow_Closing_1(object sender, System.ComponentModel.CancelEventArgs e)
+        void FrmMainWindow_Closing_1(object sender, CancelEventArgs e)
         {
             SaveBackupList();
             StartWithWindows();
