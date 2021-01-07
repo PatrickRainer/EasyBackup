@@ -22,7 +22,7 @@ namespace EasyBackup
         public BackupCase()
         {
             BackupId = Guid.NewGuid();
-
         }
+
     }
 }

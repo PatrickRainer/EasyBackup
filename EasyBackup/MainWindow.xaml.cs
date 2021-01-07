@@ -18,7 +18,6 @@ using Microsoft.Win32;
 using Application = System.Windows.Forms.Application;
 using Timer = System.Windows.Forms.Timer;
 
-//TODO: Bind all controls to the SelectedBackup property
 //TODO: User Hangfire Framework for managing those tasks
 
 namespace EasyBackup
@@ -73,9 +72,8 @@ namespace EasyBackup
             InitTimer();
 
             // DataGrid Binding
-            //CaseGrid.ItemsSource = CaseList;
             DataGridBinding();
-            //TODO: Select the first Backup
+            CaseGrid.SelectedIndex = 0;
 
             //Version Label
             if (ApplicationDeployment.IsNetworkDeployed)
