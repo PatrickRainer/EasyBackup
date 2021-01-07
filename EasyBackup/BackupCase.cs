@@ -11,18 +11,18 @@ namespace EasyBackup
     [System.Serializable]
     public class BackupCase
     {
-        public Guid BackupID { get; set; }
-        public string name { get; set; }
-        public string sourcePath { get; set; }
-        public string destinationPath { get; set; }
-        public DateTime backupDateTime { get; set; }
-        public TimeSpan BackupTime { get; set; } = DateTime.UtcNow.TimeOfDay;
-        public IterationType iteration { get; set; }
-        public DateTime lastBackupTime { get; set; }
+        public Guid BackupId { get; set; }
+        public string BackupTitle { get; set; }
+        public string SourcePath { get; set; }
+        public string DestinationPath { get; set; }
+        public DateTime BackupDateTime { get; set; }
+        public TimeSpan BackupTime { get; set; } = DateTime.Now.TimeOfDay;
+        public IterationType Iteration { get; set; }
+        public DateTime LastBackupDateTime { get; set; }
 
         public BackupCase()
         {
-            BackupID = Guid.NewGuid();
+            BackupId = Guid.NewGuid();
 
         }
     }

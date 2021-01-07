@@ -93,7 +93,7 @@ namespace EasyBackup
         void CaseGridOnLoadingRow(object sender, DataGridRowEventArgs e)
         {
             var backupCase = e.Row.Item as BackupCase;
-            if (!Directory.Exists(backupCase?.sourcePath)) e.Row.Background = new SolidColorBrush(Colors.IndianRed);
+            if (!Directory.Exists(backupCase?.SourcePath)) e.Row.Background = new SolidColorBrush(Colors.IndianRed);
         }
 
         void StartWithWindows()
@@ -175,31 +175,31 @@ namespace EasyBackup
             _isBackupRunning = true;
 
             //Check if the source Directory exists
-            if (!Directory.Exists(_backupCase.sourcePath))
+            if (!Directory.Exists(_backupCase.SourcePath))
             {
                 //MessageBox.Show(_backupCase.sourcePath + " does not exist!");
-                StatusText.Text = _backupCase.sourcePath + " does not exist!";
+                StatusText.Text = _backupCase.SourcePath + " does not exist!";
                 return;
             }
 
             //Now Create all of the directories
-            foreach (var dirPath in Directory.GetDirectories(_backupCase.sourcePath, "*",
+            foreach (var dirPath in Directory.GetDirectories(_backupCase.SourcePath, "*",
                 SearchOption.AllDirectories))
             {
-                Directory.CreateDirectory(dirPath.Replace(_backupCase.sourcePath, _backupCase.destinationPath));
+                Directory.CreateDirectory(dirPath.Replace(_backupCase.SourcePath, _backupCase.DestinationPath));
                 ProgressBar.Value += 1;
             }
 
 
-            //Copy all the files & Replaces any files with the same name
-            foreach (var newPath in Directory.GetFiles(_backupCase.sourcePath, "*.*",
+            //Copy all the files & Replaces any files with the same BackupTitle
+            foreach (var newPath in Directory.GetFiles(_backupCase.SourcePath, "*.*",
                 SearchOption.AllDirectories))
             {
-                File.Copy(newPath, newPath.Replace(_backupCase.sourcePath, _backupCase.destinationPath), true);
+                File.Copy(newPath, newPath.Replace(_backupCase.SourcePath, _backupCase.DestinationPath), true);
                 ProgressBar.Value += 1;
             }
 
-            _backupCase.lastBackupTime = DateTime.Now;
+            _backupCase.LastBackupDateTime = DateTime.Now;
 
             StatusText.Text = "Backup finished!";
 
@@ -241,7 +241,7 @@ namespace EasyBackup
             var threads = new List<Thread>();
 
             foreach (var bc in _caseList)
-                if (DateTime.Now >= _TodayAt12 && bc.lastBackupTime.Date != DateTime.Now.Date)
+                if (DateTime.Now >= _TodayAt12 && bc.LastBackupDateTime.Date != DateTime.Now.Date)
                     CopyFolderContent(bc);
             //threads.Add(new Thread(() => CopyFolderContent(bc)));
             //threads.Last().Start();
@@ -269,11 +269,11 @@ namespace EasyBackup
 
             _caseList.Add(new BackupCase
             {
-                name = tbBackupName.Text,
-                sourcePath = tbSourcePath.Text,
-                destinationPath = tbDestinationPath.Text,
-                iteration = _iterationType,
-                backupDateTime = _DateTimeResult
+                BackupTitle = tbBackupName.Text,
+                SourcePath = tbSourcePath.Text,
+                DestinationPath = tbDestinationPath.Text,
+                Iteration = _iterationType,
+                BackupDateTime = _DateTimeResult
             });
         }
 

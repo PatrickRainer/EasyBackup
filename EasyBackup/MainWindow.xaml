@@ -24,11 +24,11 @@
                 <RowDefinition Height="20*" />
             </Grid.RowDefinitions>
             <TextBox x:Name="tbSourcePath" HorizontalAlignment="Left" Height="45" Margin="29,77,0,0"
-                     TextWrapping="Wrap" Text="{Binding SelectedBackup.sourcePath}" VerticalAlignment="Top" Width="245" />
+                     TextWrapping="Wrap" Text="{Binding SelectedBackup.SourcePath}" VerticalAlignment="Top" Width="245" />
             <Label Content="Source Path" HorizontalAlignment="Left" Margin="29,51,0,0" VerticalAlignment="Top"
                    Height="26" Width="73" />
             <TextBox x:Name="tbDestinationPath" HorizontalAlignment="Left" Height="51" Margin="29,159,0,0"
-                     TextWrapping="Wrap" Text="{Binding SelectedBackup.destinationPath}" VerticalAlignment="Top" Width="245" />
+                     TextWrapping="Wrap" Text="{Binding SelectedBackup.DestinationPath}" VerticalAlignment="Top" Width="245" />
             <Label Content="Destination Path" HorizontalAlignment="Left" Margin="29,133,0,0" VerticalAlignment="Top"
                    Height="26" Width="97" />
             <Button Content="" HorizontalAlignment="Left" Margin="279,77,0,0" VerticalAlignment="Top" Width="22"
@@ -49,7 +49,7 @@
                     VerticalAlignment="Top" Width="75" Click="BtnDelete_Click" Grid.Column="1" Height="20" />
             <DatePicker x:Name="dpDatePicker" HorizontalAlignment="Left" Margin="0,74,0,0" VerticalAlignment="Top"
                         Width="120" Grid.Column="1" Height="24"
-                        SelectedDate="{Binding SelectedBackup.backupDateTime}"/>
+                        SelectedDate="{Binding SelectedBackup.BackupDateTime}"/>
             <ComboBox x:Name="cbIterationType" HorizontalAlignment="Left" Margin="0,124,0,0" VerticalAlignment="Top"
                       Width="120" Grid.Column="1" Height="22">
                 <ComboBoxItem Content="Daily" />
@@ -71,10 +71,12 @@
                       Margin="0,28,0,0" VerticalAlignment="Top" Checked="CboxStartWithWindows_Checked"
                       Unchecked="CboxStartWithWindows_Unchecked" Grid.Column="1" Height="15" Width="128" />
             <TextBox x:Name="tbTime" HorizontalAlignment="Left" Height="23" Margin="139,74,0,0" TextWrapping="Wrap"
-                     Text="{Binding SelectedBackup.BackupTime}" VerticalAlignment="Top" Width="37" Grid.Column="1" />
+                     VerticalAlignment="Top" Width="37" Grid.Column="1"
+                     Text="{Binding SelectedBackup.BackupTime, Converter={StaticResource TimeSpanConverter}}" />
+
             <TextBox x:Name="tbBackupName" HorizontalAlignment="Left" Height="23" Margin="29,28,0,0"
-                     TextWrapping="Wrap" Text="{Binding SelectedBackup.name}" VerticalAlignment="Top" Width="245"
-                     />
+                     TextWrapping="Wrap" Text="{Binding SelectedBackup.BackupTitle}" VerticalAlignment="Top" Width="245"
+            />
             <DataGrid DataContext="{StaticResource ItemCollectionViewSource}" ItemsSource="{Binding}"
                       AutoGenerateColumns="True" x:Name="CaseGrid" Grid.Row="1" Grid.ColumnSpan="2"
                       CanUserAddRows="False"/>
