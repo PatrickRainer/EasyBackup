@@ -15,7 +15,8 @@ namespace EasyBackup
         public string name { get; set; }
         public string sourcePath { get; set; }
         public string destinationPath { get; set; }
-        public DateTime backupTime { get; set; }
+        public DateTime backupDateTime { get; set; }
+        
         public IterationType iteration { get; set; }
         public DateTime lastBackupTime { get; set; }
 

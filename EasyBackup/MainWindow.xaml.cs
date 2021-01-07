@@ -273,7 +273,7 @@ namespace EasyBackup
                 sourcePath = tbSourcePath.Text,
                 destinationPath = tbDestinationPath.Text,
                 iteration = _iterationType,
-                backupTime = _DateTimeResult
+                backupDateTime = _DateTimeResult
             });
         }
 
