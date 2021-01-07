@@ -310,8 +310,9 @@ namespace EasyBackup
                     bin.Serialize(stream, _caseList);
                 }
             }
-            catch (IOException)
+            catch (IOException e)
             {
+                StatusText.Text = e.Message;
             }
         }
 
@@ -326,8 +327,9 @@ namespace EasyBackup
                     _caseList = (ObservableCollection<BackupCase>) bin.Deserialize(stream);
                 }
             }
-            catch (IOException)
+            catch (IOException e)
             {
+                StatusText.Text = e.Message;
             }
         }
 
