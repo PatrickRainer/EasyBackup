@@ -13,8 +13,8 @@ namespace EasyBackup.Services
 {
     public class BackupService : INotifyPropertyChanged
     {
-        Queue<BackupCase> _backupQueue = new Queue<BackupCase>();
-        bool IsQueueEmpty;
+        Queue<Task<bool>> _runningBackups = new Queue<Task<bool>>();
+        
         string _status;
 
         public string Status
@@ -33,22 +33,22 @@ namespace EasyBackup.Services
             
         }
 
-        public async Task AddBackup(BackupCase backupCase)
+        public void AddBackup(BackupCase backupCase)
         {
-            _backupQueue.Enqueue(backupCase);
-          await RunBackupInQueue();
+            _runningBackups.Enqueue(BackupAsync(backupCase));
+
+            RunBackups();
         }
 
-        private async Task RunBackupInQueue()
+       async void RunBackups()
         {
-            IsQueueEmpty = _backupQueue.Count <= 0;
+            if (_runningBackups.Count <=0) return;
 
-            if (!IsQueueEmpty)
-            {
-              var result = await BackupAsync(_backupQueue.Dequeue());
-            }
+            IsTaskRunning = true;
+            var t = await _runningBackups.Dequeue();
+            IsTaskRunning + false;
         }
-        
+
         async Task<bool> BackupAsync(BackupCase backupCase)
         {
             var t = await Task.Run(() =>

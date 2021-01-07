@@ -40,11 +40,11 @@ namespace EasyBackup.Tests
         public void AddBackupTest()
         {
             backupService.AddBackup(b1);
-            Console.WriteLine(backupService.Status);
+            //Console.WriteLine(backupService.Status);
             backupService.AddBackup(b2);
-            Console.WriteLine(backupService.Status);
+            //Console.WriteLine(backupService.Status);
             backupService.AddBackup(b2);
-            Console.WriteLine(backupService.Status);
+            //Console.WriteLine(backupService.Status);
         }
     }
 }
