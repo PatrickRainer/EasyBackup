@@ -76,7 +76,8 @@
                      TextWrapping="Wrap" Text="{Binding SelectedBackup.name}" VerticalAlignment="Top" Width="245"
                      />
             <DataGrid DataContext="{StaticResource ItemCollectionViewSource}" ItemsSource="{Binding}"
-                      AutoGenerateColumns="True" x:Name="CaseGrid" Grid.Row="1" Grid.ColumnSpan="2" />
+                      AutoGenerateColumns="True" x:Name="CaseGrid" Grid.Row="1" Grid.ColumnSpan="2"
+                      CanUserAddRows="False"/>
             <Label x:Name="lblVersion" Content="Version" Grid.Column="1" HorizontalAlignment="Left" Margin="80,217,0,0"
                    VerticalAlignment="Top" />
         </Grid>
