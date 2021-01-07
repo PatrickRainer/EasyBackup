@@ -173,7 +173,7 @@ namespace EasyBackup
                 return;
             }
 
-            StatusText.Text = "running ...";
+            StatusText.Text = $"{SelectedBackup.BackupTitle} is running ...";
             StatusText.UpdateLayout();
 
             _isBackupRunning = true;
