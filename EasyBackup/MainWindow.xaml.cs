@@ -242,7 +242,7 @@ namespace EasyBackup
         {
             isBackupTimeReached();
 
-            BackupDailyAt12();
+            //BackupDailyAt12();
         }
 
         void BackupDailyAt12()
@@ -262,7 +262,7 @@ namespace EasyBackup
 
         void isBackupTimeReached()
         {
-            //TODO: isBackupTimeReached
+            //TODO: isBackupTimeReached then add to Backup queue
         }
 
         void btnAddClick(object sender, RoutedEventArgs e)
