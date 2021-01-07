@@ -16,7 +16,7 @@ namespace EasyBackup
         public string sourcePath { get; set; }
         public string destinationPath { get; set; }
         public DateTime backupDateTime { get; set; }
-        
+        public TimeSpan BackupTime { get; set; } = DateTime.UtcNow.TimeOfDay;
         public IterationType iteration { get; set; }
         public DateTime lastBackupTime { get; set; }
 
