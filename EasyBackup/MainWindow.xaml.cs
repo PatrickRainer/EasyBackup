@@ -13,6 +13,7 @@ using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Media;
 using EasyBackup.Annotations;
+using EasyBackup.Converters;
 using Microsoft.Win32;
 using Application = System.Windows.Forms.Application;
 using Timer = System.Windows.Forms.Timer;
@@ -67,8 +68,6 @@ namespace EasyBackup
             cbIterationType.ItemsSource = IterationTypeList;
             cbIterationType.SelectedIndex = 0;
 
-            // Default dtPicker Value
-            dpDatePicker.SelectedDate = DateTime.Now.Date;
 
             // Init Timer to Backup
             InitTimer();
@@ -262,18 +261,17 @@ namespace EasyBackup
             var bc = new BackupCase();
 
             // Parse IterationType
-            Enum.TryParse(cbIterationType.Text, out IterationType _iterationType);
-
-            // Create DateTime
-            DateTime.TryParse(dpDatePicker.Text + " " + tbTime.Text, out var _DateTimeResult);
+            Enum.TryParse(cbIterationType.Text, out IterationType iterationType);
+            TimeSpan.TryParse(tbTime.Text, out var time);
 
             _caseList.Add(new BackupCase
             {
                 BackupTitle = tbBackupName.Text,
                 SourcePath = tbSourcePath.Text,
                 DestinationPath = tbDestinationPath.Text,
-                Iteration = _iterationType,
-                BackupDateTime = _DateTimeResult
+                Iteration = iterationType,
+                BackupDateTime = DateTime.Now,
+                BackupTime = time
             });
         }
 
