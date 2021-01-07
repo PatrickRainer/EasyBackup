@@ -248,30 +248,27 @@ namespace EasyBackup
 
         void isBackupTimeReached()
         {
-            //TODO:
+            //TODO: isBackupTimeReached
         }
 
         void btnAddClick(object sender, RoutedEventArgs e)
         {
             AddBackupCase();
+            CaseGrid.SelectedIndex = CaseGrid.Items.Count - 1;
         }
 
         void AddBackupCase()
         {
-            var bc = new BackupCase();
+            //var bc = new BackupCase();
 
             // Parse IterationType
-            Enum.TryParse(cbIterationType.Text, out IterationType iterationType);
-            TimeSpan.TryParse(tbTime.Text, out var time);
+            //Enum.TryParse(cbIterationType.Text, out IterationType iterationType);
+            //TimeSpan.TryParse(tbTime.Text, out var time);
 
             _caseList.Add(new BackupCase
             {
-                BackupTitle = tbBackupName.Text,
-                SourcePath = tbSourcePath.Text,
-                DestinationPath = tbDestinationPath.Text,
-                Iteration = iterationType,
-                BackupDateTime = DateTime.Now,
-                BackupTime = time
+                BackupTitle = "New Backup",
+                BackupTime = DateTime.Now.TimeOfDay
             });
         }
 
