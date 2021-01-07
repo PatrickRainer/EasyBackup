@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using System.Windows.Media;
 using EasyBackup.Annotations;
 using EasyBackup.Converters;
+using EasyBackup.Services;
 using Microsoft.Win32;
 using Application = System.Windows.Forms.Application;
 using Timer = System.Windows.Forms.Timer;
@@ -30,7 +31,7 @@ namespace EasyBackup
         //private string myDestinationPath = @"\\sulzer.com\dfs\ct\users\ch\rainpat\Documents\Backup";
 
         ObservableCollection<BackupCase> _caseList = new ObservableCollection<BackupCase>();
-      
+        BackupService _backupService = new BackupService();
 
         public BackupCase SelectedBackup
         {
@@ -85,6 +86,13 @@ namespace EasyBackup
             _notifyIcon.Text = @"Easy Backup";
             //notifyIcon.Icon = this.Icon;
             _notifyIcon.Visible = true;
+
+
+            //BUG: The application is blocked, Tasks have to be async
+            foreach (var backupCase in _caseList)
+            {
+                _backupService.AddBackup(backupCase);
+            }
         }
 
         List<IterationType> IterationTypeList { get; }

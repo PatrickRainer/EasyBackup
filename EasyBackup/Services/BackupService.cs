@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,35 +33,38 @@ namespace EasyBackup.Services
             
         }
 
-        private void RunBackupInQueue()
+        public async Task AddBackup(BackupCase backupCase)
+        {
+            _backupQueue.Enqueue(backupCase);
+          await RunBackupInQueue();
+        }
+
+        private async Task RunBackupInQueue()
         {
             IsQueueEmpty = _backupQueue.Count <= 0;
 
             if (!IsQueueEmpty)
             {
-                Backup(_backupQueue.Dequeue());
+              var result = await BackupAsync(_backupQueue.Dequeue());
             }
         }
-
-        public void AddBackup(BackupCase backupCase)
+        
+        async Task<bool> BackupAsync(BackupCase backupCase)
         {
-            _backupQueue.Enqueue(backupCase);
-            RunBackupInQueue();
-        }
-
-        bool Backup(BackupCase backupCase)
-        {
-            var t = Task<bool>.Factory.StartNew(() =>
+            var t = await Task.Run(() =>
 
                 {
                     Status = $"Backing up {backupCase.BackupTitle}...";
-                    Thread.Sleep(2000);
-                    Status = $"Backup {backupCase.BackupTitle} finished.";
+                    Console.WriteLine(Status);
+                    Thread.Sleep(5000);
+            
+                    Status = $"BackupAsync {backupCase.BackupTitle} finished.";
+                    Console.WriteLine(Status);
                     return true;
                 }
             );
 
-            return t.Result;
+            return t;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
