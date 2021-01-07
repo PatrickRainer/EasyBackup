@@ -34,13 +34,13 @@
             <Label Content="Destination Path" HorizontalAlignment="Left" Margin="29,133,0,0" VerticalAlignment="Top"
                    Height="26" Width="97" />
             <Button Content="" HorizontalAlignment="Left" Margin="279,77,0,0" VerticalAlignment="Top" Width="22"
-                    Height="22" Click="Button_Click">
+                    Height="22" Click="SelectSourceFolderButton_Click">
                 <Button.Background>
                     <ImageBrush ImageSource="Resources/Images/Icon_OpenFolder01.png" />
                 </Button.Background>
             </Button>
             <Button Content="" HorizontalAlignment="Left" Margin="279,159,0,0" VerticalAlignment="Top" Width="22"
-                    Height="22" Click="Button_Click_1">
+                    Height="22" Click="SelectDestinationFolderButton_Click">
                 <Button.Background>
                     <ImageBrush ImageSource="Resources/Images/Icon_OpenFolder01.png" />
                 </Button.Background>

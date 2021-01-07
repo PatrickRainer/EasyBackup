@@ -122,23 +122,30 @@ namespace EasyBackup
             }
         }
 
-        void Button_Click(object sender, RoutedEventArgs e)
+        void SelectSourceFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            tbSourcePath.Text = GetPath();
+            tbSourcePath.Text = string.IsNullOrEmpty(tbSourcePath.Text) ? GetPath() : GetPath(tbSourcePath.Text);
         }
 
-        void Button_Click_1(object sender, RoutedEventArgs e)
+        void SelectDestinationFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            tbDestinationPath.Text = GetPath();
+            tbDestinationPath.Text = string.IsNullOrEmpty(tbDestinationPath.Text) ? GetPath() : GetPath(tbDestinationPath.Text);
         }
 
         /// <summary>
         ///     Open a Folder Browser Dialog and return the path
         /// </summary>
         /// <returns></returns>
-        string GetPath()
+        string GetPath(string existingPath = null)
         {
+            //TODO: Add last folder of source path to path and create this folder if necessary
+            //TODO: If already a path, then open this path
             var fbd = new FolderBrowserDialog();
+            fbd.ShowNewFolderButton = true;
+            if (existingPath!=null)
+            {
+                fbd.SelectedPath = existingPath;
+            }
 
             if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -183,8 +190,17 @@ namespace EasyBackup
             foreach (var dirPath in Directory.GetDirectories(_backupCase.SourcePath, "*",
                 SearchOption.AllDirectories))
             {
-                Directory.CreateDirectory(dirPath.Replace(_backupCase.SourcePath, _backupCase.DestinationPath));
-                ProgressBar.Value += 1;
+                try
+                {
+                    Directory.CreateDirectory(dirPath.Replace(_backupCase.SourcePath, _backupCase.DestinationPath));
+                    ProgressBar.Value += 1;
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    StatusText.Text = e.ToString();
+                    return;
+                    //throw;
+                }
             }
 
 
