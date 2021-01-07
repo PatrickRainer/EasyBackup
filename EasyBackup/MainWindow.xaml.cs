@@ -7,6 +7,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -29,6 +30,7 @@ namespace EasyBackup
         //private string myDestinationPath = @"\\sulzer.com\dfs\ct\users\ch\rainpat\Documents\Backup";
 
         ObservableCollection<BackupCase> _caseList = new ObservableCollection<BackupCase>();
+      
 
         public BackupCase SelectedBackup
         {
