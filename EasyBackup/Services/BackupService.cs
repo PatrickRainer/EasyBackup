@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EasyBackup.Annotations;
@@ -13,9 +10,19 @@ namespace EasyBackup.Services
 {
     public class BackupService : INotifyPropertyChanged
     {
-        Queue<Task<bool>> _runningBackups = new Queue<Task<bool>>();
-        
+        const int TimerStartDelay = 1000;
+        const int TimerInterval = 5000;
+
+        readonly ObservableCollection<BackupCase> _queuedBackups = new ObservableCollection<BackupCase>();
+        Task _runningTask;
         string _status;
+
+        public BackupService()
+        {
+            //Register Timer Callback and Start Timer
+            var timer = new Timer(TimerCallback);
+            timer.Change(TimerStartDelay, TimerInterval);
+        }
 
         public string Status
         {
@@ -28,46 +35,41 @@ namespace EasyBackup.Services
             }
         }
 
-        public BackupService()
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        async void TimerCallback(object state)
         {
-            
+            if (_queuedBackups.Count <= 0) return;
+
+            if (_runningTask == null || _runningTask.IsCompleted)
+            {
+                _runningTask = Task.Run(() => BackupAsync(_queuedBackups[0]));
+                await _runningTask;
+                _queuedBackups.RemoveAt(0);
+            }
         }
 
         public void AddBackup(BackupCase backupCase)
         {
-            _runningBackups.Enqueue(BackupAsync(backupCase));
-
-            RunBackups();
+            _queuedBackups.Add(backupCase);
         }
 
-       async void RunBackups()
+        async Task BackupAsync(BackupCase backupCase)
         {
-            if (_runningBackups.Count <=0) return;
-
-            IsTaskRunning = true;
-            var t = await _runningBackups.Dequeue();
-            IsTaskRunning + false;
-        }
-
-        async Task<bool> BackupAsync(BackupCase backupCase)
-        {
-            var t = await Task.Run(() =>
+            await Task.Run(() =>
 
                 {
                     Status = $"Backing up {backupCase.BackupTitle}...";
                     Console.WriteLine(Status);
-                    Thread.Sleep(5000);
-            
+
+                    Task.Delay(TimeSpan.FromSeconds(5)).Wait(); //TODO: Make a real Backup here
+
                     Status = $"BackupAsync {backupCase.BackupTitle} finished.";
                     Console.WriteLine(Status);
                     return true;
                 }
             );
-
-            return t;
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
