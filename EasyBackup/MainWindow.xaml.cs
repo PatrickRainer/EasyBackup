@@ -7,14 +7,12 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Media;
 using EasyBackup.Annotations;
-using EasyBackup.Converters;
 using EasyBackup.Services;
 using Microsoft.Win32;
 using Application = System.Windows.Forms.Application;
@@ -27,34 +25,24 @@ namespace EasyBackup
     public partial class MainWindow : INotifyPropertyChanged
     {
         readonly NotifyIcon _notifyIcon = new NotifyIcon();
+
+        BackupService _backupService = new BackupService();
         //private string mySourcePath = @"C:\Intel";
         //private string myDestinationPath = @"\\sulzer.com\dfs\ct\users\ch\rainpat\Documents\Backup";
 
         ObservableCollection<BackupCase> _caseList = new ObservableCollection<BackupCase>();
-        BackupService _backupService = new BackupService();
 
-        public BackupCase SelectedBackup
-        {
-            get => _selectedBackup;
-            set
-            {
-                if (Equals(value, _selectedBackup)) return;
-                _selectedBackup = value;
-                OnPropertyChanged();
-            }
-        }
-
-        bool _isBackupRunning;
+        //bool _isBackupRunning;
         CollectionViewSource _itemCollectionViewSource;
+        BackupCase _selectedBackup;
 
         Timer _timer1;
-        BackupCase _selectedBackup;
 
         public MainWindow()
         {
             InitializeComponent();
             CaseGrid.LoadingRow += CaseGridOnLoadingRow;
-            CaseGrid.SelectionChanged += (sender, args) => { SelectedBackup = CaseGrid.SelectedItem as BackupCase;};
+            CaseGrid.SelectionChanged += (sender, args) => { SelectedBackup = CaseGrid.SelectedItem as BackupCase; };
 
             // Load Backup List
             LoadBackupList();
@@ -95,7 +83,24 @@ namespace EasyBackup
             }
         }
 
+        public BackupCase SelectedBackup
+        {
+            get => _selectedBackup;
+            set
+            {
+                if (Equals(value, _selectedBackup)) return;
+                _selectedBackup = value;
+                OnPropertyChanged();
+            }
+        }
+
         List<IterationType> IterationTypeList { get; }
+
+        public string Status { get; set; }
+
+        // Run in Icon Tray
+        // https://stackoverflow.com/questions/11027051/develop-a-program-that-runs-in-the-background-in-net
+        public event PropertyChangedEventHandler PropertyChanged;
 
         void CaseGridOnLoadingRow(object sender, DataGridRowEventArgs e)
         {
@@ -139,7 +144,9 @@ namespace EasyBackup
 
         void SelectDestinationFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            tbDestinationPath.Text = string.IsNullOrEmpty(tbDestinationPath.Text) ? GetPath() : GetPath(tbDestinationPath.Text);
+            tbDestinationPath.Text = string.IsNullOrEmpty(tbDestinationPath.Text)
+                ? GetPath()
+                : GetPath(tbDestinationPath.Text);
         }
 
         /// <summary>
@@ -152,7 +159,7 @@ namespace EasyBackup
             //TODO: If already a path, then open this path
             var fbd = new FolderBrowserDialog();
             fbd.ShowNewFolderButton = true;
-            if (existingPath!=null)
+            if (existingPath != null)
             {
                 fbd.SelectedPath = existingPath;
             }
@@ -175,39 +182,39 @@ namespace EasyBackup
             CopyFolderContent((BackupCase) CaseGrid.SelectedItem);
         }
 
-        void CopyFolderContent(BackupCase _backupCase)
+        void CopyFolderContent(BackupCase backupCase)
         {
-            if (_isBackupRunning)
+            /*if (_isBackupRunning)
             {
                 StatusText.Text = "A Backup is already Running";
                 return;
-            }
+            }*/
 
-            StatusText.Text = $"{SelectedBackup.BackupTitle} is running ...";
-            StatusText.UpdateLayout();
+            Status = $"{SelectedBackup.BackupTitle} is running ...";
+            //StatusText.UpdateLayout();
 
-            _isBackupRunning = true;
+            // _isBackupRunning = true;
 
             //Check if the source Directory exists
-            if (!Directory.Exists(_backupCase.SourcePath))
+            if (!Directory.Exists(backupCase.SourcePath))
             {
                 //MessageBox.Show(_backupCase.sourcePath + " does not exist!");
-                StatusText.Text = _backupCase.SourcePath + " does not exist!";
+                Status = backupCase.SourcePath + " does not exist!";
                 return;
             }
 
             //Now Create all of the directories
-            foreach (var dirPath in Directory.GetDirectories(_backupCase.SourcePath, "*",
+            foreach (var dirPath in Directory.GetDirectories(backupCase.SourcePath, "*",
                 SearchOption.AllDirectories))
             {
                 try
                 {
-                    Directory.CreateDirectory(dirPath.Replace(_backupCase.SourcePath, _backupCase.DestinationPath));
-                    ProgressBar.Value += 1;
+                    Directory.CreateDirectory(dirPath.Replace(backupCase.SourcePath, backupCase.DestinationPath));
+                    //ProgressBar.Value += 1; //TODO: Track Progress
                 }
                 catch (UnauthorizedAccessException e)
                 {
-                    StatusText.Text = e.ToString();
+                    Status = e.ToString();
                     return;
                     //throw;
                 }
@@ -215,18 +222,18 @@ namespace EasyBackup
 
 
             //Copy all the files & Replaces any files with the same BackupTitle
-            foreach (var newPath in Directory.GetFiles(_backupCase.SourcePath, "*.*",
+            foreach (var newPath in Directory.GetFiles(backupCase.SourcePath, "*.*",
                 SearchOption.AllDirectories))
             {
-                File.Copy(newPath, newPath.Replace(_backupCase.SourcePath, _backupCase.DestinationPath), true);
-                ProgressBar.Value += 1;
+                File.Copy(newPath, newPath.Replace(backupCase.SourcePath, backupCase.DestinationPath), true);
+                //ProgressBar.Value += 1;
             }
 
-            _backupCase.LastBackupDateTime = DateTime.Now;
+            backupCase.LastBackupDateTime = DateTime.Now;
 
-            StatusText.Text = "Backup finished!";
+            Status = $"Backup: {backupCase.BackupTitle} finished!";
 
-            _isBackupRunning = false;
+            // _isBackupRunning = false;
         }
 
         void CboxStartWithWindows_Checked(object sender, RoutedEventArgs e)
@@ -358,10 +365,6 @@ namespace EasyBackup
             SaveBackupList();
             StartWithWindows();
         }
-
-        // Run in Icon Tray
-        // https://stackoverflow.com/questions/11027051/develop-a-program-that-runs-in-the-background-in-net
-        public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
