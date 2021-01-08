@@ -4,7 +4,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using EasyBackup.Annotations;
+using EasyBackup.Models;
+using EasyBackup.Properties;
 
 namespace EasyBackup.Services
 {

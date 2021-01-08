@@ -107,7 +107,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\BackupCase.cs"/>
     <Compile Include="Services\BackupService.cs" />
+      <Compile Include="Services\CopyService.cs"/>
     <Compile Include="Tests\BackupTaskServiceTests.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -117,7 +119,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BackupCase.cs" />
     <Compile Include="Converters\TimeSpanStringConverter.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -171,6 +172,5 @@
   <ItemGroup>
     <Resource Include="Resources\Images\Icon_Sync01.png" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

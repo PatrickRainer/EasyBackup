@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using EasyBackup.Models;
 using EasyBackup.Services;
 using NUnit.Framework;
 
@@ -11,11 +7,6 @@ namespace EasyBackup.Tests
     [TestFixture]
     public class BackupTaskServiceTests
     {
-        BackupService backupService;
-        BackupCase b1;
-        BackupCase b2;
-        BackupCase b3;
-
         [SetUp]
         public void Setup()
         {
@@ -33,8 +24,12 @@ namespace EasyBackup.Tests
             {
                 BackupTitle = "Backup 3"
             };
-
         }
+
+        BackupService backupService;
+        BackupCase b1;
+        BackupCase b2;
+        BackupCase b3;
 
         [Test]
         public void AddBackupTest()

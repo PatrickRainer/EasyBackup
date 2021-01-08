@@ -5,18 +5,19 @@ using System.ComponentModel;
 using System.Deployment.Application;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Media;
-using EasyBackup.Annotations;
+using EasyBackup.Models;
+using EasyBackup.Properties;
 using EasyBackup.Services;
 using Microsoft.Win32;
 using Application = System.Windows.Forms.Application;
-using Timer = System.Windows.Forms.Timer;
+using MessageBox = System.Windows.MessageBox;
 
 //TODO: User Hangfire Framework for managing those tasks
 
@@ -179,61 +180,8 @@ namespace EasyBackup
             if (IsBackupCaseSelected() == false) return;
 
             // Copy
-            CopyFolderContent((BackupCase) CaseGrid.SelectedItem);
-        }
-
-        void CopyFolderContent(BackupCase backupCase)
-        {
-            /*if (_isBackupRunning)
-            {
-                StatusText.Text = "A Backup is already Running";
-                return;
-            }*/
-
-            Status = $"{SelectedBackup.BackupTitle} is running ...";
-            //StatusText.UpdateLayout();
-
-            // _isBackupRunning = true;
-
-            //Check if the source Directory exists
-            if (!Directory.Exists(backupCase.SourcePath))
-            {
-                //MessageBox.Show(_backupCase.sourcePath + " does not exist!");
-                Status = backupCase.SourcePath + " does not exist!";
-                return;
-            }
-
-            //Now Create all of the directories
-            foreach (var dirPath in Directory.GetDirectories(backupCase.SourcePath, "*",
-                SearchOption.AllDirectories))
-            {
-                try
-                {
-                    Directory.CreateDirectory(dirPath.Replace(backupCase.SourcePath, backupCase.DestinationPath));
-                    //ProgressBar.Value += 1; //TODO: Track Progress
-                }
-                catch (UnauthorizedAccessException e)
-                {
-                    Status = e.ToString();
-                    return;
-                    //throw;
-                }
-            }
-
-
-            //Copy all the files & Replaces any files with the same BackupTitle
-            foreach (var newPath in Directory.GetFiles(backupCase.SourcePath, "*.*",
-                SearchOption.AllDirectories))
-            {
-                File.Copy(newPath, newPath.Replace(backupCase.SourcePath, backupCase.DestinationPath), true);
-                //ProgressBar.Value += 1;
-            }
-
-            backupCase.LastBackupDateTime = DateTime.Now;
-
-            Status = $"Backup: {backupCase.BackupTitle} finished!";
-
-            // _isBackupRunning = false;
+            string tempStatus;
+            CopyService.CopyFolderContent((BackupCase) CaseGrid.SelectedItem, out tempStatus);
         }
 
         void CboxStartWithWindows_Checked(object sender, RoutedEventArgs e)
@@ -262,7 +210,7 @@ namespace EasyBackup
             //BackupDailyAt12();
         }
 
-        void BackupDailyAt12()
+        /*void BackupDailyAt12()
         {
             // Get today 12 o'clock
             DateTime.TryParse(DateTime.Now.Date.ToShortDateString() + " 12:00 PM", out var _TodayAt12);
@@ -272,10 +220,10 @@ namespace EasyBackup
 
             foreach (var bc in _caseList)
                 if (DateTime.Now >= _TodayAt12 && bc.LastBackupDateTime.Date != DateTime.Now.Date)
-                    CopyFolderContent(bc);
+                    CopyService.CopyFolderContent(bc);
             //threads.Add(new Thread(() => CopyFolderContent(bc)));
             //threads.Last().Start();
-        }
+        }*/
 
         void isBackupTimeReached()
         {
@@ -348,11 +296,10 @@ namespace EasyBackup
             {
                 StatusText.Text = e.Message;
             }
-        }
-
-        void BtnTest_Click(object sender, RoutedEventArgs e)
-        {
-            BackupDailyAt12();
+            catch (SerializationException e)
+            {
+                MessageBox.Show(e.Message);
+            }
         }
 
         void BtnDelete_Click(object sender, RoutedEventArgs e)
