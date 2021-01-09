@@ -13,8 +13,6 @@ namespace EasyBackup.Services
     {
         const int TimerStartDelay = 1000;
         const int TimerInterval = 5000;
-
-        readonly ObservableCollection<BackupCase> _queuedBackups = new ObservableCollection<BackupCase>();
         Task _runningTask;
         string _status;
 
@@ -24,6 +22,8 @@ namespace EasyBackup.Services
             var timer = new Timer(TimerCallback);
             timer.Change(TimerStartDelay, TimerInterval);
         }
+
+        public ObservableCollection<BackupCase> QueuedBackups { get; } = new ObservableCollection<BackupCase>();
 
         public string Status
         {
@@ -40,20 +40,21 @@ namespace EasyBackup.Services
 
         async void TimerCallback(object state)
         {
-            if (_queuedBackups.Count <= 0) return;
+            if (QueuedBackups.Count <= 0) return;
 
             if (_runningTask == null || _runningTask.IsCompleted)
             {
-                _runningTask = Task.Run(() => BackupAsync(_queuedBackups[0]));
+                _runningTask = Task.Run(() => BackupAsync(QueuedBackups[0]));
                 await _runningTask;
-                _queuedBackups.RemoveAt(0);
+                QueuedBackups.RemoveAt(0);
             }
         }
 
         public void AddBackup(BackupCase backupCase)
         {
-            //TODO: Is this backup already queued then return
-            _queuedBackups.Add(backupCase);
+            if (QueuedBackups.Contains(backupCase)) return;
+
+            QueuedBackups.Add(backupCase);
         }
 
         async Task BackupAsync(BackupCase backupCase)

@@ -25,5 +25,19 @@ namespace EasyBackup.Tests
             _backupService.AddBackup(MockBackupCases.B2);
             //Console.WriteLine(backupService.Status);
         }
+
+        [Test]
+        public void AddSameBackupTwiceTest()
+        {
+            _backupService.AddBackup(MockBackupCases.B1);
+            //Console.WriteLine(backupService.Status);
+            _backupService.AddBackup(MockBackupCases.B2);
+            //Console.WriteLine(backupService.Status);
+            _backupService.AddBackup(MockBackupCases.B2);
+            //Console.WriteLine(backupService.Status);
+
+
+            Assert.LessOrEqual(_backupService.QueuedBackups.Count, 2);
+        }
     }
 }
