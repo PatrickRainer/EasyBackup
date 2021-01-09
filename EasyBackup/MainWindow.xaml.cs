@@ -318,5 +318,10 @@ namespace EasyBackup
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        void BtnSave_OnClick(object sender, RoutedEventArgs e)
+        {
+            SaveBackupList();
+        }
     }
 }
