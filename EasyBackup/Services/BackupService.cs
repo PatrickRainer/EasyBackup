@@ -14,7 +14,7 @@ namespace EasyBackup.Services
         const int TimerStartDelay = 1000;
         const int TimerInterval = 5000;
         Task _runningTask;
-        string _status;
+        string _status; //TODO: make a status tracker
 
         public BackupService()
         {
@@ -65,7 +65,9 @@ namespace EasyBackup.Services
                     Status = $"Backing up {backupCase.BackupTitle}...";
                     Console.WriteLine(Status);
 
-                    Task.Delay(TimeSpan.FromSeconds(5)).Wait(); //TODO: Make a real Backup here
+                    //Task.Delay(TimeSpan.FromSeconds(5)).Wait(); //TODO: Make a real Backup here
+                    string tmpStatus;
+                    CopyService.CopyFolderContent(backupCase, out tmpStatus);
 
                     Status = $"BackupAsync {backupCase.BackupTitle} finished.";
                     Console.WriteLine(Status);
