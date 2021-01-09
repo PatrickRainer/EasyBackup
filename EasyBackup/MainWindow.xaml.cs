@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Deployment.Application;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -38,6 +39,7 @@ namespace EasyBackup
         BackupCase _selectedBackup;
 
         Timer _timer1;
+        public BackupTimeChecker TimeChecker { get; }
 
         public MainWindow()
         {
@@ -77,11 +79,7 @@ namespace EasyBackup
             _notifyIcon.Visible = true;
 
 
-            //BUG: The application is blocked, Tasks have to be async
-            foreach (var backupCase in _caseList)
-            {
-                _backupService.AddBackup(backupCase);
-            }
+            TimeChecker = new BackupTimeChecker(_caseList.ToList(), _backupService);
         }
 
         public BackupCase SelectedBackup
