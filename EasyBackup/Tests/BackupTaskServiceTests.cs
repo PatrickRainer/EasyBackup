@@ -1,5 +1,4 @@
-﻿using EasyBackup.Models;
-using EasyBackup.Services;
+﻿using EasyBackup.Services;
 using NUnit.Framework;
 
 namespace EasyBackup.Tests
@@ -10,35 +9,20 @@ namespace EasyBackup.Tests
         [SetUp]
         public void Setup()
         {
-            backupService = new BackupService();
-
-            b1 = new BackupCase()
-            {
-                BackupTitle = "Backup 1"
-            };
-            b2 = new BackupCase()
-            {
-                BackupTitle = "Backup 2"
-            };
-            b3 = new BackupCase()
-            {
-                BackupTitle = "Backup 3"
-            };
+            _backupService = new BackupService();
         }
 
-        BackupService backupService;
-        BackupCase b1;
-        BackupCase b2;
-        BackupCase b3;
+        BackupService _backupService;
+        readonly MockBackupCases _mockBackupCases = new MockBackupCases();
 
         [Test]
         public void AddBackupTest()
         {
-            backupService.AddBackup(b1);
+            _backupService.AddBackup(MockBackupCases.B1);
             //Console.WriteLine(backupService.Status);
-            backupService.AddBackup(b2);
+            _backupService.AddBackup(MockBackupCases.B2);
             //Console.WriteLine(backupService.Status);
-            backupService.AddBackup(b2);
+            _backupService.AddBackup(MockBackupCases.B2);
             //Console.WriteLine(backupService.Status);
         }
     }
