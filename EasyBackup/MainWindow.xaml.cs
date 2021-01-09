@@ -13,6 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Media;
+using EasyBackup.Helpers;
 using EasyBackup.Models;
 using EasyBackup.Properties;
 using EasyBackup.Services;
@@ -39,7 +40,6 @@ namespace EasyBackup
         BackupCase _selectedBackup;
 
         Timer _timer1;
-        public BackupTimeChecker TimeChecker { get; }
 
         public MainWindow()
         {
@@ -81,6 +81,8 @@ namespace EasyBackup
 
             TimeChecker = new BackupTimeChecker(_caseList.ToList(), _backupService);
         }
+
+        public BackupTimeChecker TimeChecker { get; }
 
         public BackupCase SelectedBackup
         {
@@ -143,9 +145,12 @@ namespace EasyBackup
 
         void SelectDestinationFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            tbDestinationPath.Text = string.IsNullOrEmpty(tbDestinationPath.Text)
-                ? GetPath()
-                : GetPath(tbDestinationPath.Text);
+            var lastSourceFolderName = StringHelpers.ExtractLastFolder(SelectedBackup.SourcePath);
+
+            tbDestinationPath.Text = (string.IsNullOrEmpty(tbDestinationPath.Text)
+                                         ? GetPath()
+                                         : GetPath(tbDestinationPath.Text))
+                                     + lastSourceFolderName;
         }
 
         /// <summary>
@@ -154,7 +159,6 @@ namespace EasyBackup
         /// <returns></returns>
         string GetPath(string existingPath = null)
         {
-            //TODO: Add last folder of source path to path and create this folder if necessary
             //TODO: If already a path, then open this path
             var fbd = new FolderBrowserDialog();
             fbd.ShowNewFolderButton = true;

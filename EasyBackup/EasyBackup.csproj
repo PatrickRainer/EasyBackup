@@ -107,6 +107,7 @@
           <Generator>MSBuild:Compile</Generator>
           <SubType>Designer</SubType>
       </ApplicationDefinition>
+      <Compile Include="Helpers\StringHelpers.cs"/>
       <Compile Include="Models\BackupCase.cs"/>
       <Compile Include="Services\BackupService.cs"/>
       <Compile Include="Services\BackupTimeChecker.cs"/>
