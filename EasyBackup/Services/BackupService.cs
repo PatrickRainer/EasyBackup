@@ -65,7 +65,6 @@ namespace EasyBackup.Services
                     Status = $"Backing up {backupCase.BackupTitle}...";
                     Console.WriteLine(Status);
 
-                    //Task.Delay(TimeSpan.FromSeconds(5)).Wait(); //TODO: Make a real Backup here
                     string tmpStatus;
                     CopyService.CopyFolderContent(backupCase, out tmpStatus);
 

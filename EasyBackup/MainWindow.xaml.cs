@@ -22,6 +22,7 @@ using Application = System.Windows.Forms.Application;
 using MessageBox = System.Windows.MessageBox;
 
 //TODO: User Hangfire Framework for managing those tasks
+//TODO: User SharpZipLibrary to backup as zip
 
 namespace EasyBackup
 {
@@ -63,7 +64,6 @@ namespace EasyBackup
 
 
             // Init Timer to Backup
-            InitTimer();
 
             // DataGrid Binding
             DataGridBinding();
@@ -194,42 +194,6 @@ namespace EasyBackup
         void CboxStartWithWindows_Unchecked(object sender, RoutedEventArgs e)
         {
             RemoveApplicationFromStartup();
-        }
-
-
-        public void InitTimer()
-        {
-            _timer1 = new Timer();
-            _timer1.Tick += timer1_Tick;
-            _timer1.Interval = 5000; // in miliseconds
-            _timer1.Start();
-        }
-
-        void timer1_Tick(object sender, EventArgs e)
-        {
-            isBackupTimeReached();
-
-            //BackupDailyAt12();
-        }
-
-        /*void BackupDailyAt12()
-        {
-            // Get today 12 o'clock
-            DateTime.TryParse(DateTime.Now.Date.ToShortDateString() + " 12:00 PM", out var _TodayAt12);
-
-            // Thread List
-            var threads = new List<Thread>();
-
-            foreach (var bc in _caseList)
-                if (DateTime.Now >= _TodayAt12 && bc.LastBackupDateTime.Date != DateTime.Now.Date)
-                    CopyService.CopyFolderContent(bc);
-            //threads.Add(new Thread(() => CopyFolderContent(bc)));
-            //threads.Last().Start();
-        }*/
-
-        void isBackupTimeReached()
-        {
-            //TODO: isBackupTimeReached then add to Backup queue
         }
 
         void btnAddClick(object sender, RoutedEventArgs e)
