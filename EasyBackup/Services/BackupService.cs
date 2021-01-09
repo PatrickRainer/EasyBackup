@@ -52,6 +52,7 @@ namespace EasyBackup.Services
 
         public void AddBackup(BackupCase backupCase)
         {
+            //TODO: Is this backup already queued then return
             _queuedBackups.Add(backupCase);
         }
 
