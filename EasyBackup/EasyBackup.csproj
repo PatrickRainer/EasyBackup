@@ -107,9 +107,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Models\BackupCase.cs"/>
+    <Compile Include="Models\BackupCase.cs" />
     <Compile Include="Services\BackupService.cs" />
-      <Compile Include="Services\CopyService.cs"/>
+    <Compile Include="Services\BackupTimeChecker.cs" />
+      <Compile Include="Services\CopyService.cs" />
     <Compile Include="Tests\BackupTaskServiceTests.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
