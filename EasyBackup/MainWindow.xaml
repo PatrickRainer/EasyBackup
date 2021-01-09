@@ -59,8 +59,12 @@
                 <ComboBoxItem Content="Weekly" />
                 <ComboBoxItem Content="Monthly" />
             </ComboBox>
-            <Button x:Name="btnBackupNow" Content="Backup Now" HorizontalAlignment="Left" Margin="26,215,0,0"
+            <Button x:Name="btnBackupNow" Content="Backup Now" 
+                    HorizontalAlignment="Left" Margin="26,215,0,0"
                     VerticalAlignment="Top" Width="75" Click="BtnBackupNow_Click" Height="20" />
+            <Button x:Name="btnSave" Content="Save" 
+                    HorizontalAlignment="Left" Margin="200,215,0,0"
+                    VerticalAlignment="Top" Width="75" Click="BtnSave_OnClick" Height="20" />
             <StackPanel Grid.Row="2" Grid.ColumnSpan="2">
 
                 <StatusBar x:Name="StatusBar">
