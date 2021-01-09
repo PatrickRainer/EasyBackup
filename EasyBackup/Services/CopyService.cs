@@ -49,7 +49,16 @@ namespace EasyBackup.Services
             foreach (var newPath in Directory.GetFiles(backupCase.SourcePath, "*.*",
                 SearchOption.AllDirectories))
             {
-                File.Copy(newPath, newPath.Replace(backupCase.SourcePath, backupCase.DestinationPath), true);
+                try
+                {
+                    File.Copy(newPath, newPath.Replace(backupCase.SourcePath, backupCase.DestinationPath), true);
+                }
+                catch (IOException e)
+                {
+                    Console.WriteLine(e); //TODO: Write to a log file
+                    //throw;
+                }
+
                 //ProgressBar.Value += 1;
             }
 
