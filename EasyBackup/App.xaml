@@ -5,7 +5,6 @@
              xmlns:converters="clr-namespace:EasyBackup.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-
         <converters:TimeSpanStringConverter x:Key="TimeSpanConverter" />
     </Application.Resources>
 </Application>
