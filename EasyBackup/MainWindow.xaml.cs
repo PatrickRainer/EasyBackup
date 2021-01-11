@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Deployment.Application;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -18,7 +19,7 @@ using EasyBackup.Models;
 using EasyBackup.Properties;
 using EasyBackup.Services;
 using Microsoft.Win32;
-using Application = System.Windows.Forms.Application;
+using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
 //TODO: User Hangfire Framework for managing those tasks
@@ -28,7 +29,7 @@ namespace EasyBackup
 {
     public partial class MainWindow : INotifyPropertyChanged
     {
-        readonly NotifyIcon _notifyIcon = new NotifyIcon();
+        //readonly NotifyIcon _notifyIcon = new NotifyIcon();
 
         BackupService _backupService = new BackupService();
         //private string mySourcePath = @"C:\Intel";
@@ -41,6 +42,7 @@ namespace EasyBackup
         BackupCase _selectedBackup;
 
         Timer _timer1;
+        NotifyIcon _mNotifyIcon;
 
         public MainWindow()
         {
@@ -51,9 +53,11 @@ namespace EasyBackup
             // Load Backup List
             LoadBackupList();
 
-            //TODO: Load Start with windows
+           
             //StartWithWindows();
 
+            NotifyIcon();
+            
             // Bind Iteration Type Combobox
             cbIterationType.Items.Clear();
             var values = Enum.GetValues(typeof(IterationType));
@@ -74,12 +78,36 @@ namespace EasyBackup
                 lblVersion.Content = $"Version: {ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(4)}";
 
             // Tray Icon
-            _notifyIcon.Text = @"Easy Backup";
+            // _notifyIcon.Text = @"Easy Backup";
             //notifyIcon.Icon = this.Icon;
-            _notifyIcon.Visible = true;
+            // _notifyIcon.Visible = true;
 
 
             TimeChecker = new BackupTimeChecker(_caseList.ToList(), _backupService);
+        }
+
+        public void NotifyIcon()
+        {
+           
+
+            
+            // initialise code here
+            _mNotifyIcon = new System.Windows.Forms.NotifyIcon
+            {
+                BalloonTipText = "The app has been minimised. Click the tray icon to show.",
+                BalloonTipTitle = "Easy Backup",
+                Text = "Easy Backup"
+            };
+            
+            _mNotifyIcon.Icon = new Icon(Application.GetResourceStream(new Uri("pack://application:,,,/Resources/Images/Icon_Sync01.ico")).Stream);
+            
+            _mNotifyIcon.Click += new EventHandler(_notifyIcon_Click);
+        }
+
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            _mNotifyIcon.Dispose();
         }
 
         public BackupTimeChecker TimeChecker { get; }
@@ -126,7 +154,7 @@ namespace EasyBackup
         {
             using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
-                key.SetValue("Easy_Backup_Sync", "\"" + Application.ExecutablePath + "\"");
+                key.SetValue("Easy_Backup_Sync", "\"" + System.Windows.Forms.Application.ExecutablePath + "\"");
             }
         }
 
@@ -288,6 +316,41 @@ namespace EasyBackup
         void BtnSave_OnClick(object sender, RoutedEventArgs e)
         {
             SaveBackupList();
+        }
+
+        private WindowState m_storedWindowState = WindowState.Normal;
+        void OnStateChanged(object sender, EventArgs e)
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                Hide();
+                if(_mNotifyIcon != null)
+                    _mNotifyIcon.ShowBalloonTip(2000);
+            }
+            else
+                m_storedWindowState = WindowState;
+        }
+
+        void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            CheckTrayIcon();
+        }
+        
+        void _notifyIcon_Click(object sender, EventArgs e)
+        {
+            Show();
+            WindowState = m_storedWindowState;
+        }
+        
+        void CheckTrayIcon()
+        {
+            ShowTrayIcon(!IsVisible);
+        }
+
+        void ShowTrayIcon(bool show)
+        {
+            if (_mNotifyIcon != null)
+                _mNotifyIcon.Visible = show;
         }
     }
 }
