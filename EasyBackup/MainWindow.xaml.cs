@@ -28,6 +28,7 @@ using MessageBox = System.Windows.MessageBox;
 //BUG: During a longer Backup the application is freezed
 //BUG: Icon in TaskBar/TaskManager is missing
 //BUG: StartWithWindowsCheckbox is not saved, needs to be checked on the program start
+//BUG: Last Backup Time was not written on manual backup
 
 namespace EasyBackup
 {
