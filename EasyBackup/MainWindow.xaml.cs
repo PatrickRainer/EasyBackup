@@ -1,353 +1,356 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Deployment.Application;
+using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.IO;
-using Microsoft.Win32;
 using System.Windows.Forms;
-using System.Threading;
-using System.Diagnostics;
-using Application = System.Windows.Forms.Application;
-using Timer = System.Windows.Forms.Timer;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Collections.ObjectModel;
-using System.Deployment.Application;
+using System.Windows.Media;
+using EasyBackup.Helpers;
+using EasyBackup.Models;
+using EasyBackup.Properties;
+using EasyBackup.Services;
+using Microsoft.Win32;
+using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
+
+//TODO: User Hangfire Framework for managing those tasks
+//TODO: User SharpZipLibrary to backup as zip
 
 namespace EasyBackup
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : INotifyPropertyChanged
     {
+        //readonly NotifyIcon _notifyIcon = new NotifyIcon();
+
+        BackupService _backupService = new BackupService();
         //private string mySourcePath = @"C:\Intel";
         //private string myDestinationPath = @"\\sulzer.com\dfs\ct\users\ch\rainpat\Documents\Backup";
 
-        private ObservableCollection<BackupCase> CaseList = new ObservableCollection<BackupCase>();
-        private CollectionViewSource itemCollectionViewSource;
+        ObservableCollection<BackupCase> _caseList = new ObservableCollection<BackupCase>();
 
-        private List<IterationType> IterationTypeList { get; set; }
-               
-        private Timer timer1;
+        //bool _isBackupRunning;
+        CollectionViewSource _itemCollectionViewSource;
+        BackupCase _selectedBackup;
 
-        private bool isBackupRunning = false;
-
-        private NotifyIcon notifyIcon = new NotifyIcon();
+        Timer _timer1;
+        NotifyIcon _mNotifyIcon;
 
         public MainWindow()
         {
             InitializeComponent();
+            CaseGrid.LoadingRow += CaseGridOnLoadingRow;
+            CaseGrid.SelectionChanged += (sender, args) => { SelectedBackup = CaseGrid.SelectedItem as BackupCase; };
 
             // Load Backup List
             LoadBackupList();
 
-            //TOOD: Load Start with windows
+           
             //StartWithWindows();
 
+            NotifyIcon();
+            
             // Bind Iteration Type Combobox
             cbIterationType.Items.Clear();
-            Array values = Enum.GetValues((typeof(IterationType)));
+            var values = Enum.GetValues(typeof(IterationType));
             IterationTypeList = new List<IterationType>();
-            foreach (IterationType value in values)
-            {
-                IterationTypeList.Add(value);
-            }
+            foreach (IterationType value in values) IterationTypeList.Add(value);
             cbIterationType.ItemsSource = IterationTypeList;
             cbIterationType.SelectedIndex = 0;
 
-            // Default dtPicker Value
-            dpDatePicker.SelectedDate = DateTime.Now.Date;
 
             // Init Timer to Backup
-            InitTimer();
 
             // DataGrid Binding
-            //CaseGrid.ItemsSource = CaseList;
             DataGridBinding();
+            CaseGrid.SelectedIndex = 0;
 
             //Version Label
             if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                lblVersion.Content = string.Format("Version: {0}",
-                    ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(4));
-            }
+                lblVersion.Content = $"Version: {ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(4)}";
 
             // Tray Icon
-            notifyIcon.Text = "Easy Backup";
+            // _notifyIcon.Text = @"Easy Backup";
             //notifyIcon.Icon = this.Icon;
-            notifyIcon.Visible = true;
+            // _notifyIcon.Visible = true;
 
+
+            TimeChecker = new BackupTimeChecker(_caseList.ToList(), _backupService);
         }
 
-        private void StartWithWindows()
+        public void NotifyIcon()
         {
-            if ((bool)cboxStartWithWindows.IsChecked)
-            {
-                AddApplicationToStartup();
-            }
-            else if (!(bool)cboxStartWithWindows.IsChecked)
-            {
-                RemoveApplicationFromStartup();
-            }
-        }
+           
 
-        private void DataGridBinding()
-        {
             
-            itemCollectionViewSource = (CollectionViewSource)(FindResource("ItemCollectionViewSource"));
-            itemCollectionViewSource.Source = CaseList;
+            // initialise code here
+            _mNotifyIcon = new System.Windows.Forms.NotifyIcon
+            {
+                BalloonTipText = "The app has been minimised. Click the tray icon to show.",
+                BalloonTipTitle = "Easy Backup",
+                Text = "Easy Backup"
+            };
+            
+            _mNotifyIcon.Icon = new Icon(Application.GetResourceStream(new Uri("pack://application:,,,/Resources/Images/Icon_Sync01.ico")).Stream);
+            
+            _mNotifyIcon.Click += new EventHandler(_notifyIcon_Click);
+        }
+
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            _mNotifyIcon.Dispose();
+        }
+
+        public BackupTimeChecker TimeChecker { get; }
+
+        public BackupCase SelectedBackup
+        {
+            get => _selectedBackup;
+            set
+            {
+                if (Equals(value, _selectedBackup)) return;
+                _selectedBackup = value;
+                OnPropertyChanged();
+            }
+        }
+
+        List<IterationType> IterationTypeList { get; }
+
+        public string Status { get; set; }
+
+        // Run in Icon Tray
+        // https://stackoverflow.com/questions/11027051/develop-a-program-that-runs-in-the-background-in-net
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        void CaseGridOnLoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            var backupCase = e.Row.Item as BackupCase;
+            if (!Directory.Exists(backupCase?.SourcePath)) e.Row.Background = new SolidColorBrush(Colors.IndianRed);
+        }
+
+        void StartWithWindows()
+        {
+            if ((bool) cboxStartWithWindows.IsChecked)
+                AddApplicationToStartup();
+            else if (!(bool) cboxStartWithWindows.IsChecked) RemoveApplicationFromStartup();
+        }
+
+        void DataGridBinding()
+        {
+            _itemCollectionViewSource = (CollectionViewSource) FindResource("ItemCollectionViewSource");
+            _itemCollectionViewSource.Source = _caseList;
         }
 
         public static void AddApplicationToStartup()
         {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
-                key.SetValue("Easy_Backup_Sync", "\"" + Application.ExecutablePath + "\"");
+                key.SetValue("Easy_Backup_Sync", "\"" + System.Windows.Forms.Application.ExecutablePath + "\"");
             }
         }
 
         public static void RemoveApplicationFromStartup()
         {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
                 key.DeleteValue("Easy_Backup_Sync", false);
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        void SelectSourceFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            tbSourcePath.Text = GetPath();
+            tbSourcePath.Text = string.IsNullOrEmpty(tbSourcePath.Text) ? GetPath() : GetPath(tbSourcePath.Text);
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        void SelectDestinationFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            tbDestinationPath.Text = GetPath();
+            var lastSourceFolderName = StringHelpers.ExtractLastFolder(SelectedBackup.SourcePath);
+
+            tbDestinationPath.Text = (string.IsNullOrEmpty(tbDestinationPath.Text)
+                                         ? GetPath()
+                                         : GetPath(tbDestinationPath.Text))
+                                     + lastSourceFolderName;
         }
 
         /// <summary>
-        /// Open a Folder Browser Dialog and return the path
+        ///     Open a Folder Browser Dialog and return the path
         /// </summary>
         /// <returns></returns>
-        private string GetPath()
+        string GetPath(string existingPath = null)
         {
-            FolderBrowserDialog fbd = new FolderBrowserDialog();
-            string path;
+            //TODO: If already a path, then open this path
+            var fbd = new FolderBrowserDialog();
+            fbd.ShowNewFolderButton = true;
+            if (existingPath != null)
+            {
+                fbd.SelectedPath = existingPath;
+            }
 
             if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                path = fbd.SelectedPath;
+                var path = fbd.SelectedPath;
                 return path;
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
-        private void BtnBackupNow_Click(object sender, RoutedEventArgs e)
+        void BtnBackupNow_Click(object sender, RoutedEventArgs e)
         {
             // Sanity Check
-            if (IsBackupCaseSelected()==false)
-            {
-                return;
-            }
+            if (IsBackupCaseSelected() == false) return;
 
             // Copy
-            CopyFolderContent((BackupCase)CaseGrid.SelectedItem);
+            string tempStatus;
+            CopyService.CopyFolderContent((BackupCase) CaseGrid.SelectedItem, out tempStatus);
         }
 
-        private void CopyFolderContent(BackupCase _backupCase)
-        {
-            if (isBackupRunning)
-            {
-                StatusText.Text="A Backup is already Running";
-                return;
-            }
-
-            StatusText.Text="running ...";
-            StatusText.UpdateLayout();
-
-            isBackupRunning = true;
-
-            //Now Create all of the directories
-
-                foreach (string dirPath in Directory.GetDirectories(_backupCase.sourcePath, "*",
-                    SearchOption.AllDirectories))
-                {
-                    Directory.CreateDirectory(dirPath.Replace(_backupCase.sourcePath, _backupCase.destinationPath));
-                    ProgressBar.Value += 1;
-                }
-            
-
-            //Copy all the files & Replaces any files with the same name
-            foreach (string newPath in Directory.GetFiles(_backupCase.sourcePath, "*.*",
-                SearchOption.AllDirectories))
-            {
-                File.Copy(newPath, newPath.Replace(_backupCase.sourcePath, _backupCase.destinationPath), true);
-                ProgressBar.Value += 1;
-            }
-
-            _backupCase.lastBackupTime = DateTime.Now;
-
-            StatusText.Text = "Backup finished!";
-
-            isBackupRunning = false;
-        }
-
-        private void CboxStartWithWindows_Checked(object sender, RoutedEventArgs e)
+        void CboxStartWithWindows_Checked(object sender, RoutedEventArgs e)
         {
             AddApplicationToStartup();
         }
 
-        private void CboxStartWithWindows_Unchecked(object sender, RoutedEventArgs e)
+        void CboxStartWithWindows_Unchecked(object sender, RoutedEventArgs e)
         {
             RemoveApplicationFromStartup();
         }
 
-
-        public void InitTimer()
-        {
-            timer1 = new Timer();
-            timer1.Tick += new EventHandler(timer1_Tick);
-            timer1.Interval = 5000; // in miliseconds
-            timer1.Start();
-        }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            isBackupTimeReached();
-
-            BackupDailyAt12();
-        }
-
-        private void BackupDailyAt12()
-        {
-            // Get today 12 o'clock
-            DateTime.TryParse(DateTime.Now.Date.ToShortDateString() + " 12:00 PM", out DateTime _TodayAt12);
-
-            // Thread List
-            List<Thread> threads = new List<Thread>();
-
-            foreach (BackupCase bc in CaseList)
-            {
-                if (DateTime.Now >= _TodayAt12 && bc.lastBackupTime.Date != DateTime.Now.Date)
-                {
-                    CopyFolderContent(bc);
-                        //threads.Add(new Thread(() => CopyFolderContent(bc)));
-                        //threads.Last().Start();
-                }
-            }
-        }
-
-        private void isBackupTimeReached()
-        {
-            //TODO:
-        }
-
-        private void btnAddClick(object sender, RoutedEventArgs e)
+        void btnAddClick(object sender, RoutedEventArgs e)
         {
             AddBackupCase();
+            CaseGrid.SelectedIndex = CaseGrid.Items.Count - 1;
         }
 
-        private void AddBackupCase()
+        void AddBackupCase()
         {
-            BackupCase bc = new BackupCase();
+            //var bc = new BackupCase();
 
             // Parse IterationType
-            Enum.TryParse(cbIterationType.Text, out IterationType _iterationType);
+            //Enum.TryParse(cbIterationType.Text, out IterationType iterationType);
+            //TimeSpan.TryParse(tbTime.Text, out var time);
 
-            // Create DateTime
-            DateTime.TryParse(dpDatePicker.Text + " " + tbTime.Text, out DateTime _DateTimeResult);
-
-            CaseList.Add(new BackupCase()
+            _caseList.Add(new BackupCase
             {
-                name = tbBackupName.Text,
-                sourcePath = tbSourcePath.Text,
-                destinationPath = tbDestinationPath.Text,
-                iteration = _iterationType,
-                backupTime = _DateTimeResult
+                BackupTitle = "New Backup",
+                BackupTime = DateTime.Now.TimeOfDay
             });
         }
 
-        private void DeleteBackupCase()
+        void DeleteBackupCase()
         {
-            if (IsBackupCaseSelected()==false)
-            {
-                return;
-            }
+            if (IsBackupCaseSelected() == false) return;
 
-            CaseList.RemoveAt(CaseGrid.SelectedIndex);
-
+            _caseList.RemoveAt(CaseGrid.SelectedIndex);
         }
 
-        private bool IsBackupCaseSelected()
+        bool IsBackupCaseSelected()
         {
-            if (CaseList.Count - 1 < CaseGrid.SelectedIndex || CaseGrid.SelectedIndex == -1)
-            {
-               return false;
-            }
-            else
-            {
-                return true;
-            }
+            if (_caseList.Count - 1 < CaseGrid.SelectedIndex || CaseGrid.SelectedIndex == -1)
+                return false;
+            return true;
         }
 
-        private void SaveBackupList()
+        void SaveBackupList()
         {
             try
             {
                 using (Stream stream = File.Open("BackupList.bin", FileMode.Create))
                 {
-                    BinaryFormatter bin = new BinaryFormatter();
-                    bin.Serialize(stream, CaseList);
+                    var bin = new BinaryFormatter();
+                    bin.Serialize(stream, _caseList);
                 }
             }
-            catch (IOException)
+            catch (IOException e)
             {
+                StatusText.Text = e.Message;
             }
         }
 
-        private void LoadBackupList()
+        void LoadBackupList()
         {
             try
             {
                 using (Stream stream = File.Open("BackupList.bin", FileMode.Open))
                 {
-                    BinaryFormatter bin = new BinaryFormatter();
+                    var bin = new BinaryFormatter();
 
-                    CaseList = (ObservableCollection<BackupCase>)bin.Deserialize(stream);
+                    _caseList = (ObservableCollection<BackupCase>) bin.Deserialize(stream);
                 }
             }
-            catch (IOException)
+            catch (IOException e)
             {
+                StatusText.Text = e.Message;
+            }
+            catch (SerializationException e)
+            {
+                MessageBox.Show(e.Message);
             }
         }
 
-        private void BtnTest_Click(object sender, RoutedEventArgs e)
-        {
-            BackupDailyAt12();
-        }
-
-        private void BtnDelete_Click(object sender, RoutedEventArgs e)
+        void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
             DeleteBackupCase();
         }
 
-        private void FrmMainWindow_Closing_1(object sender, System.ComponentModel.CancelEventArgs e)
+        void FrmMainWindow_Closing_1(object sender, CancelEventArgs e)
         {
             SaveBackupList();
             StartWithWindows();
         }
 
-        // Run in Icon Tray
-        // https://stackoverflow.com/questions/11027051/develop-a-program-that-runs-in-the-background-in-net
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        void BtnSave_OnClick(object sender, RoutedEventArgs e)
+        {
+            SaveBackupList();
+        }
+
+        private WindowState m_storedWindowState = WindowState.Normal;
+        void OnStateChanged(object sender, EventArgs e)
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                Hide();
+                if(_mNotifyIcon != null)
+                    _mNotifyIcon.ShowBalloonTip(2000);
+            }
+            else
+                m_storedWindowState = WindowState;
+        }
+
+        void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            CheckTrayIcon();
+        }
+        
+        void _notifyIcon_Click(object sender, EventArgs e)
+        {
+            Show();
+            WindowState = m_storedWindowState;
+        }
+        
+        void CheckTrayIcon()
+        {
+            ShowTrayIcon(!IsVisible);
+        }
+
+        void ShowTrayIcon(bool show)
+        {
+            if (_mNotifyIcon != null)
+                _mNotifyIcon.Visible = show;
+        }
     }
 }
