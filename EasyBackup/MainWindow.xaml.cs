@@ -33,7 +33,7 @@ namespace EasyBackup
 {
     public partial class MainWindow : INotifyPropertyChanged
     {
-        //readonly NotifyIcon _notifyIcon = new NotifyIcon();
+        //readonly InitNotifyIcon _notifyIcon = new InitNotifyIcon();
 
         BackupService _backupService = new BackupService();
         //private string mySourcePath = @"C:\Intel";
@@ -60,7 +60,7 @@ namespace EasyBackup
            
             //StartWithWindows();
 
-            NotifyIcon();
+            InitNotifyIcon();
             
             // Bind Iteration Type Combobox
             cbIterationType.Items.Clear();
@@ -90,22 +90,20 @@ namespace EasyBackup
             TimeChecker = new BackupTimeChecker(_caseList.ToList(), _backupService);
         }
 
-        public void NotifyIcon()
+        public void InitNotifyIcon()
         {
-           
+           // initialise code here
+           _mNotifyIcon = new System.Windows.Forms.NotifyIcon
+           {
+               BalloonTipText = @"The app has been minimized. Click the tray icon to show.",
+               BalloonTipTitle = @"Easy Backup",
+               Text = @"Easy Backup",
+               Icon = new Icon(Application
+                   .GetResourceStream(new Uri("pack://application:,,,/Resources/Images/Icon_Sync01.ico")).Stream)
+           };
 
-            
-            // initialise code here
-            _mNotifyIcon = new System.Windows.Forms.NotifyIcon
-            {
-                BalloonTipText = "The app has been minimised. Click the tray icon to show.",
-                BalloonTipTitle = "Easy Backup",
-                Text = "Easy Backup"
-            };
-            
-            _mNotifyIcon.Icon = new Icon(Application.GetResourceStream(new Uri("pack://application:,,,/Resources/Images/Icon_Sync01.ico")).Stream);
-            
-            _mNotifyIcon.Click += new EventHandler(_notifyIcon_Click);
+            ShowNotifyIcon();
+           _mNotifyIcon.Click += new EventHandler(_notifyIcon_Click);
         }
 
 
@@ -334,27 +332,17 @@ namespace EasyBackup
             else
                 m_storedWindowState = WindowState;
         }
-
-        void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            CheckTrayIcon();
-        }
         
         void _notifyIcon_Click(object sender, EventArgs e)
         {
             Show();
             WindowState = m_storedWindowState;
         }
-        
-        void CheckTrayIcon()
-        {
-            ShowTrayIcon(!IsVisible);
-        }
 
-        void ShowTrayIcon(bool show)
+        void ShowNotifyIcon()
         {
             if (_mNotifyIcon != null) 
-                _mNotifyIcon.Visible = show; //BUG: Null Reference Error occurs on closing the application
+                _mNotifyIcon.Visible = true;
         }
     }
 }

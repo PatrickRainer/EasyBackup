@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="Easy Backup" Height="450" Width="518.515" Closing="FrmMainWindow_Closing_1" Background="#FFB4B4B4"
         BorderBrush="#FF3A3A3A" Icon="Resources/Images/Icon_Sync01.png"
-        StateChanged="OnStateChanged" IsVisibleChanged="OnIsVisibleChanged"
+        StateChanged="OnStateChanged"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Window.Resources>
         <CollectionViewSource x:Key="ItemCollectionViewSource" CollectionViewType="ListCollectionView" />
