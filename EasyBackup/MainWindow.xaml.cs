@@ -137,30 +137,15 @@ namespace EasyBackup
             var isChecked = cboxStartWithWindows.IsChecked != null && (bool) cboxStartWithWindows.IsChecked;
 
             if (isChecked)
-                AddApplicationToStartup();
-            else RemoveApplicationFromStartup();
+                RegistryHelper.AddApplicationToStartup();
+            else
+                RegistryHelper.RemoveApplicationFromStartup();
         }
 
         void DataGridBinding()
         {
             _itemCollectionViewSource = (CollectionViewSource) FindResource("ItemCollectionViewSource");
             _itemCollectionViewSource.Source = _caseList;
-        }
-
-        public static void AddApplicationToStartup()
-        {
-            using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
-            {
-                key?.SetValue("Easy_Backup_Sync", "\"" + System.Windows.Forms.Application.ExecutablePath + "\"");
-            }
-        }
-
-        public static void RemoveApplicationFromStartup()
-        {
-            using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
-            {
-                key?.DeleteValue("Easy_Backup_Sync", false);
-            }
         }
 
         void SelectSourceFolderButton_Click(object sender, RoutedEventArgs e)
@@ -211,12 +196,12 @@ namespace EasyBackup
 
         void CBoxStartWithWindows_Checked(object sender, RoutedEventArgs e)
         {
-            AddApplicationToStartup();
+            RegistryHelper.AddApplicationToStartup();
         }
 
         void CBoxStartWithWindows_Unchecked(object sender, RoutedEventArgs e)
         {
-            RemoveApplicationFromStartup();
+            RegistryHelper.RemoveApplicationFromStartup();
         }
 
         void BtnAddClick(object sender, RoutedEventArgs e)

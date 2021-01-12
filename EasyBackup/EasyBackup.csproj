@@ -110,9 +110,11 @@
     </ApplicationDefinition>
     <Compile Include="Helpers\StringHelpers.cs" />
     <Compile Include="Models\BackupCase.cs" />
+    <Compile Include="Services\RegistryHelper.cs" />
     <Compile Include="Services\BackupService.cs" />
     <Compile Include="Services\BackupTimeChecker.cs" />
     <Compile Include="Services\CopyService.cs" />
+    <Compile Include="Tests\ApplicationAutoStartTests.cs" />
     <Compile Include="Tests\BackupTaskServiceTests.cs" />
     <Compile Include="Tests\BackupTimeCheckerTests.cs" />
     <Compile Include="Tests\MockBackupCases.cs" />
