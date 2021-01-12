@@ -15,7 +15,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>D:\Developing\BusinessApps\EasyBackup\Publish\</PublishUrl>
+    <PublishUrl>C:\Users\rainpat\source\repos\EasyBackup\Publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Unc</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -25,8 +25,8 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>\\localhost\d%24\Developing\BusinessApps\EasyBackup\Publish\</InstallUrl>
-    <ApplicationRevision>8</ApplicationRevision>
+    <InstallUrl>\\localhost\c%24\Users\rainpat\source\repos\EasyBackup\Publish\</InstallUrl>
+    <ApplicationRevision>9</ApplicationRevision>
     <ApplicationVersion>0.8.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -67,10 +67,6 @@
     <StartupObject>EasyBackup.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Magick.NET.Core, Version=5.3.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec">
-      <HintPath>..\packages\Magick.NET.Core.5.3.0\lib\net40\Magick.NET.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="nunit.framework, Version=3.5.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.3.5.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
