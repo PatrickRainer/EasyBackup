@@ -354,8 +354,8 @@ namespace EasyBackup
 
         void ShowTrayIcon(bool show)
         {
-            if (_mNotifyIcon != null)
-                _mNotifyIcon.Visible = show;
+            if (_mNotifyIcon != null) 
+                _mNotifyIcon.Visible = show; //BUG: Null Reference Error occurs on closing the application
         }
     }
 }
