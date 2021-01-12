@@ -80,7 +80,7 @@
             <xctk:MaskedTextBox x:Name="tbTime"
                                 HorizontalAlignment="Left" Height="23" Margin="0,77,0,0"
                                 HorizontalContentAlignment="Center"
-                                Mask="00:00"
+                                Mask="00:00" AutoMoveFocus="True" AutoSelectBehavior="OnFocus" InsertKeyMode="Overwrite"
                                 ValueDataType="{x:Type s:String}"
                                 VerticalAlignment="Top" Width="47" Grid.Column="1"
                                 Text="{Binding SelectedBackup.BackupTime,

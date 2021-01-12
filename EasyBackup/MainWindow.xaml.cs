@@ -24,7 +24,6 @@ using MessageBox = System.Windows.MessageBox;
 
 //TODO: Check using Hangfire Framework for managing those tasks
 //TODO: User SharpZipLibrary to backup as zip
-//BUG: Time Textbox cannot edited correctly
 //BUG: During a longer Backup the application is freezed
 //BUG: Icon in TaskBar/TaskManager is missing
 //BUG: StartWithWindowsCheckbox is not saved, needs to be checked on the program start
