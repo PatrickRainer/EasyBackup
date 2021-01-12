@@ -22,9 +22,9 @@ using Microsoft.Win32;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
-//TODO: Check using Hangfire Framework for managing those tasks
+//TODO: Check using HangFire Framework for managing those tasks
 //TODO: User SharpZipLibrary to backup as zip
-//BUG: During a longer Backup the application is freezed
+//BUG: During a longer Backup the application is freezes
 //BUG: Icon in TaskBar/TaskManager is missing
 //BUG: StartWithWindowsCheckbox is not saved, needs to be checked on the program start
 //BUG: Last Backup Time was not written on manual backup
@@ -33,19 +33,13 @@ namespace EasyBackup
 {
     public partial class MainWindow : INotifyPropertyChanged
     {
-        //readonly InitNotifyIcon _notifyIcon = new InitNotifyIcon();
-
-        BackupService _backupService = new BackupService();
-        //private string mySourcePath = @"C:\Intel";
-        //private string myDestinationPath = @"\\sulzer.com\dfs\ct\users\ch\rainpat\Documents\Backup";
+        readonly BackupService _backupService = new BackupService();
 
         ObservableCollection<BackupCase> _caseList = new ObservableCollection<BackupCase>();
 
-        //bool _isBackupRunning;
         CollectionViewSource _itemCollectionViewSource;
         BackupCase _selectedBackup;
 
-        Timer _timer1;
         NotifyIcon _mNotifyIcon;
 
         public MainWindow()
@@ -99,11 +93,12 @@ namespace EasyBackup
                BalloonTipTitle = @"Easy Backup",
                Text = @"Easy Backup",
                Icon = new Icon(Application
-                   .GetResourceStream(new Uri("pack://application:,,,/Resources/Images/Icon_Sync01.ico")).Stream)
+                   .GetResourceStream(new Uri("pack://application:,,,/Resources/Images/Icon_Sync01.ico"))
+                   ?.Stream ?? throw new InvalidOperationException())
            };
 
             ShowNotifyIcon();
-           _mNotifyIcon.Click += new EventHandler(_notifyIcon_Click);
+           _mNotifyIcon.Click += _notifyIcon_Click;
         }
 
 
@@ -127,8 +122,6 @@ namespace EasyBackup
 
         List<IterationType> IterationTypeList { get; }
 
-        public string Status { get; set; }
-
         // Run in Icon Tray
         // https://stackoverflow.com/questions/11027051/develop-a-program-that-runs-in-the-background-in-net
         public event PropertyChangedEventHandler PropertyChanged;
@@ -141,9 +134,11 @@ namespace EasyBackup
 
         void StartWithWindows()
         {
-            if ((bool) cboxStartWithWindows.IsChecked)
+            var isChecked = cboxStartWithWindows.IsChecked != null && (bool) cboxStartWithWindows.IsChecked;
+
+            if (isChecked)
                 AddApplicationToStartup();
-            else if (!(bool) cboxStartWithWindows.IsChecked) RemoveApplicationFromStartup();
+            else RemoveApplicationFromStartup();
         }
 
         void DataGridBinding()
@@ -156,7 +151,7 @@ namespace EasyBackup
         {
             using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
-                key.SetValue("Easy_Backup_Sync", "\"" + System.Windows.Forms.Application.ExecutablePath + "\"");
+                key?.SetValue("Easy_Backup_Sync", "\"" + System.Windows.Forms.Application.ExecutablePath + "\"");
             }
         }
 
@@ -164,7 +159,7 @@ namespace EasyBackup
         {
             using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
-                key.DeleteValue("Easy_Backup_Sync", false);
+                key?.DeleteValue("Easy_Backup_Sync", false);
             }
         }
 
@@ -190,8 +185,7 @@ namespace EasyBackup
         string GetPath(string existingPath = null)
         {
             //TODO: If already a path, then open this path
-            var fbd = new FolderBrowserDialog();
-            fbd.ShowNewFolderButton = true;
+            var fbd = new FolderBrowserDialog {ShowNewFolderButton = true};
             if (existingPath != null)
             {
                 fbd.SelectedPath = existingPath;
@@ -212,21 +206,20 @@ namespace EasyBackup
             if (IsBackupCaseSelected() == false) return;
 
             // Copy
-            string tempStatus;
-            CopyService.CopyFolderContent((BackupCase) CaseGrid.SelectedItem, out tempStatus);
+            CopyService.CopyFolderContent((BackupCase) CaseGrid.SelectedItem, out _);
         }
 
-        void CboxStartWithWindows_Checked(object sender, RoutedEventArgs e)
+        void CBoxStartWithWindows_Checked(object sender, RoutedEventArgs e)
         {
             AddApplicationToStartup();
         }
 
-        void CboxStartWithWindows_Unchecked(object sender, RoutedEventArgs e)
+        void CBoxStartWithWindows_Unchecked(object sender, RoutedEventArgs e)
         {
             RemoveApplicationFromStartup();
         }
 
-        void btnAddClick(object sender, RoutedEventArgs e)
+        void BtnAddClick(object sender, RoutedEventArgs e)
         {
             AddBackupCase();
             CaseGrid.SelectedIndex = CaseGrid.Items.Count - 1;
@@ -320,23 +313,22 @@ namespace EasyBackup
             SaveBackupList();
         }
 
-        private WindowState m_storedWindowState = WindowState.Normal;
+        private WindowState _mStoredWindowState = WindowState.Normal;
         void OnStateChanged(object sender, EventArgs e)
         {
             if (WindowState == WindowState.Minimized)
             {
                 Hide();
-                if(_mNotifyIcon != null)
-                    _mNotifyIcon.ShowBalloonTip(2000);
+                _mNotifyIcon?.ShowBalloonTip(2000);
             }
             else
-                m_storedWindowState = WindowState;
+                _mStoredWindowState = WindowState;
         }
         
         void _notifyIcon_Click(object sender, EventArgs e)
         {
             Show();
-            WindowState = m_storedWindowState;
+            WindowState = _mStoredWindowState;
         }
 
         void ShowNotifyIcon()
